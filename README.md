@@ -1,4 +1,4 @@
-# OpsMind
+﻿# OpsMind
 
 An agentic RAG copilot for IT incident resolution. Paste an alert or an error log, and OpsMind returns the likely root cause, similar past incidents and fix steps, with a citation for every claim.
 
@@ -33,7 +33,7 @@ tests/          pytest tests
 ## Roadmap
 
 - [x] Step 1: Project setup and FastAPI skeleton
-- [ ] Step 2: LLM router (Ollama + Claude)
+- [x] Step 2: LLM router (Ollama + Groq, with automatic fallback)
 - [ ] Step 3: Data collection and ingestion
 - [ ] Step 4: Embeddings and Qdrant vector store
 - [ ] Step 5: Hybrid retrieval and reranking
