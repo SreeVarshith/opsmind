@@ -11,12 +11,15 @@ class Settings(BaseSettings):
     app_version: str = "0.1.0"
     environment: str = "dev"
 
-    # LLM provider: "ollama" (local) or "anthropic" (API)
+    # LLM provider: "ollama" (local, free) or "openai_compat" (Groq / OpenRouter / Cerebras, free tiers)
     llm_provider: str = "ollama"
     ollama_base_url: str = "http://localhost:11434"
     ollama_model: str = "llama3.2:3b"
-    anthropic_api_key: str = ""
-    anthropic_model: str = "claude-haiku-5-5"
+
+    # Any OpenAI-compatible API. Defaults point at Groq.
+    api_base_url: str = "https://api.groq.com/openai/v1"
+    api_key: str = ""
+    api_model: str = "llama-3.3-70b-versatile"
 
     # Retrieval
     embedding_model: str = "BAAI/bge-small-en-v1.5"
