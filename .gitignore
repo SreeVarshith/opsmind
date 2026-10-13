@@ -12,3 +12,4 @@ data/processed/*
 data/raw/tickets/*
 !data/raw/tickets/tickets.jsonl
 qdrant_storage/
+.cache/

@@ -24,6 +24,9 @@ class Settings(BaseSettings):
     # Retrieval
     embedding_model: str = "BAAI/bge-small-en-v1.5"
     qdrant_url: str = "http://localhost:6333"
+    # If set, Qdrant runs inside Python and stores data in this folder (no Docker needed).
+    # Only one process can open it at a time: stop the API before re-indexing.
+    qdrant_path: str = ""
     qdrant_collection: str = "opsmind"
 
 

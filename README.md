@@ -29,6 +29,26 @@ python -m app.ingestion.pipeline         # -> data/processed/documents.jsonl
 | [logpai/loghub](https://github.com/logpai/loghub) | Logs from 8 systems, grouped by event template | 408 |
 | Synthetic tickets | LLM-written tickets, each linked to the runbook it came from (evaluation labels) | ~216 |
 
+## Search index
+
+```bash
+docker compose -f infra/docker-compose.yml up -d   # Qdrant server (or set QDRANT_PATH in .env for no-Docker mode)
+python -m app.rag.index                            # chunk + embed (bge-small, CPU) + store in Qdrant
+python -m eval.retrieval_eval --name dense_baseline
+```
+
+## Results so far
+
+Ticket -> runbook retrieval on 212 synthetic tickets (search over 108 runbooks):
+
+| Method | Recall@1 | Recall@3 | Recall@5 | Recall@10 | MRR | p50 latency |
+|---|---|---|---|---|---|---|
+| Dense (bge-small-en-v1.5) | 0.481 | 0.689 | 0.764 | 0.840 | 0.608 | 60 ms |
+
+Most errors are confusions between sibling alerts (e.g. `etcdInsufficientMembers` vs `etcdNoLeader`),
+where the distinguishing signal is a specific technical term. Hypothesis for Step 5: keyword (BM25)
+search and a cross-encoder reranker will fix many of these.
+
 ## Project layout
 
 ```
@@ -51,7 +71,7 @@ tests/          pytest tests
 - [x] Step 1: Project setup and FastAPI skeleton
 - [x] Step 2: LLM router (Ollama + Groq, with automatic fallback)
 - [x] Step 3: Data collection and ingestion
-- [ ] Step 4: Embeddings and Qdrant vector store
+- [x] Step 4: Embeddings and Qdrant vector store
 - [ ] Step 5: Hybrid retrieval and reranking
 - [ ] Step 6: `/ask` endpoint with citations
 - [ ] Step 7: LangGraph agent with a verification step
