@@ -23,6 +23,13 @@ class Settings(BaseSettings):
 
     # Retrieval
     embedding_model: str = "BAAI/bge-small-en-v1.5"
+    sparse_model: str = "Qdrant/bm25"
+    reranker_model: str = "Xenova/ms-marco-MiniLM-L-6-v2"
+    retrieval_mode: str = "hybrid"     # "dense", "sparse" or "hybrid"
+    # Off by default: the MS MARCO reranker *lowered* MRR 0.614 -> 0.539 on our benchmark
+    # (web-search model vs. Kubernetes/log text) and adds ~5 s per query on CPU.
+    rerank: bool = False
+    rerank_candidates: int = 30        # how many hits the reranker re-scores
     qdrant_url: str = "http://localhost:6333"
     # If set, Qdrant runs inside Python and stores data in this folder (no Docker needed).
     # Only one process can open it at a time: stop the API before re-indexing.

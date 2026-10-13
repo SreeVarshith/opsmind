@@ -1,6 +1,7 @@
 """Retrieval benchmark: can we find the right runbook for a ticket?
 
-    python -m eval.retrieval_eval --name dense_baseline
+    python -m eval.retrieval_eval --ablation               # all configurations + markdown table
+    python -m eval.retrieval_eval --mode hybrid --rerank   # one configuration
 
 Each synthetic ticket was written from one runbook (`related_runbook`). We use the ticket's
 title + description as the query, search only runbooks, and check at which rank the source
@@ -17,13 +18,23 @@ import time
 from datetime import datetime
 from pathlib import Path
 
-from app.ingestion.text import normalize_text
+from app.rag.reranker import get_reranker
+from app.rag.retriever import Retriever
 from app.rag.vector_store import get_vector_store
 
 TICKETS = Path("data/raw/tickets/tickets.jsonl")
 RESULTS = Path("eval/results")
 KS = (1, 3, 5, 10)
-CHUNKS_TO_FETCH = 40  # enough chunks to cover 10+ distinct runbooks
+CHUNKS_TO_FETCH = 40      # enough chunks to cover 10+ distinct runbooks
+RERANK_CANDIDATES = 50
+
+ABLATION = [  # (name, mode, rerank)
+    ("dense", "dense", False),
+    ("sparse_bm25", "sparse", False),
+    ("hybrid_rrf", "hybrid", False),
+    ("dense+rerank", "dense", True),
+    ("hybrid_rrf+rerank", "hybrid", True),
+]
 
 
 def load_eval_tickets() -> tuple[list[dict], int]:
@@ -33,46 +44,70 @@ def load_eval_tickets() -> tuple[list[dict], int]:
     return clean, len(rows) - len(clean)
 
 
-def rank_of(target: str, alerts_in_order: list[str]) -> int | None:
-    return alerts_in_order.index(target) + 1 if target in alerts_in_order else None
-
-
-def main(name: str) -> None:
-    tickets, dropped = load_eval_tickets()
-    store = get_vector_store()
+def evaluate(retriever: Retriever, tickets: list[dict], mode: str, rerank: bool) -> tuple[dict, list]:
     ranks, latencies, misses = [], [], []
-
     for t in tickets:
-        query = normalize_text(f"{t['title']}\n{t['description']}")
         start = time.perf_counter()
-        hits = store.search(query, top_k=CHUNKS_TO_FETCH, source_types=["runbook"])
+        hits = retriever.retrieve(f"{t['title']}\n{t['description']}", top_k=CHUNKS_TO_FETCH,
+                                  source_types=["runbook"], mode=mode, rerank=rerank)
         latencies.append((time.perf_counter() - start) * 1000)
 
         alerts = list(dict.fromkeys(h.metadata["alert"] for h in hits))  # dedupe, keep order
-        rank = rank_of(t["related_runbook"], alerts)
+        rank = alerts.index(t["related_runbook"]) + 1 if t["related_runbook"] in alerts else None
         ranks.append(rank)
         if rank != 1:
             misses.append({"ticket": t["ticket_id"], "expected": t["related_runbook"],
                            "rank": rank, "got": alerts[:3]})
-    store.close()
 
     n = len(ranks)
     metrics = {f"recall@{k}": sum(1 for r in ranks if r and r <= k) / n for k in KS}
     metrics["mrr"] = sum(1 / r for r in ranks if r) / n
     metrics["p50_latency_ms"] = statistics.median(latencies)
+    return metrics, misses
 
-    print(f"\n{name}: {n} tickets ({dropped} leaky tickets excluded)")
-    for key, value in metrics.items():
-        print(f"  {key:<16}{value:.3f}" if "latency" not in key else f"  {key:<16}{value:.0f} ms")
 
+def save(name: str, n: int, metrics: dict, misses: list) -> None:
     RESULTS.mkdir(parents=True, exist_ok=True)
-    out = RESULTS / f"{name}.json"
-    out.write_text(json.dumps({"name": name, "date": datetime.now().isoformat(timespec="seconds"),
-                               "n_tickets": n, "metrics": metrics, "misses": misses}, indent=2))
-    print(f"Saved to {out}  (misses listed there for error analysis)")
+    (RESULTS / f"{name}.json").write_text(json.dumps(
+        {"name": name, "date": datetime.now().isoformat(timespec="seconds"),
+         "n_tickets": n, "metrics": metrics, "misses": misses}, indent=2))
+
+
+def table(rows: list[tuple[str, dict]]) -> str:
+    head = "| Method | R@1 | R@3 | R@5 | R@10 | MRR | p50 latency |\n|---|---|---|---|---|---|---|"
+    lines = [f"| {name} | " + " | ".join(f"{m[f'recall@{k}']:.3f}" for k in KS)
+             + f" | {m['mrr']:.3f} | {m['p50_latency_ms']:.0f} ms |" for name, m in rows]
+    return "\n".join([head, *lines])
+
+
+def main(configs: list[tuple[str, str, bool]]) -> None:
+    tickets, dropped = load_eval_tickets()
+    store = get_vector_store()
+    reranker = get_reranker() if any(r for _, _, r in configs) else None
+    retriever = Retriever(store, reranker, rerank_candidates=RERANK_CANDIDATES)
+    print(f"Evaluating on {len(tickets)} tickets ({dropped} leaky tickets excluded)")
+
+    rows = []
+    for name, mode, rerank in configs:
+        metrics, misses = evaluate(retriever, tickets, mode, rerank)
+        save(name, len(tickets), metrics, misses)
+        rows.append((name, metrics))
+        print(f"  {name:<20} R@1 {metrics['recall@1']:.3f}  R@5 {metrics['recall@5']:.3f}  "
+              f"MRR {metrics['mrr']:.3f}  {metrics['p50_latency_ms']:.0f} ms")
+    store.close()
+
+    print("\n" + table(rows))
+    print(f"\nPer-run details (including misses) saved in {RESULTS}/")
 
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("--name", default="dense_baseline", help="label for this experiment")
-    main(ap.parse_args().name)
+    ap.add_argument("--ablation", action="store_true", help="run every configuration")
+    ap.add_argument("--mode", choices=["dense", "sparse", "hybrid"], default="hybrid")
+    ap.add_argument("--rerank", action="store_true")
+    ap.add_argument("--name", default=None, help="label for a single run")
+    args = ap.parse_args()
+    if args.ablation:
+        main(ABLATION)
+    else:
+        main([(args.name or f"{args.mode}{'+rerank' if args.rerank else ''}", args.mode, args.rerank)])

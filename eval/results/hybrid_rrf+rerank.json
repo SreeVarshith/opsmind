@@ -1,0 +1,1325 @@
+{
+  "name": "hybrid_rrf+rerank",
+  "date": "2026-10-13T23:39:04",
+  "n_tickets": 212,
+  "metrics": {
+    "recall@1": 0.38207547169811323,
+    "recall@3": 0.6226415094339622,
+    "recall@5": 0.75,
+    "recall@10": 0.8537735849056604,
+    "mrr": 0.5390359477242822,
+    "p50_latency_ms": 5197.693499998422
+  },
+  "misses": [
+    {
+      "ticket": "INC-0004",
+      "expected": "AlertmanagerClusterDown",
+      "rank": 2,
+      "got": [
+        "AlertmanagerFailedReload",
+        "AlertmanagerClusterDown",
+        "KubeAPIDown"
+      ]
+    },
+    {
+      "ticket": "INC-0005",
+      "expected": "AlertmanagerClusterFailedToSendAlerts",
+      "rank": 7,
+      "got": [
+        "KubeDaemonSetRolloutStuck",
+        "AlertmanagerFailedToSendAlerts",
+        "AlertmanagerFailedReload"
+      ]
+    },
+    {
+      "ticket": "INC-0007",
+      "expected": "AlertmanagerConfigInconsistent",
+      "rank": 4,
+      "got": [
+        "AlertmanagerFailedToSendAlerts",
+        "AlertmanagerClusterFailedToSendAlerts",
+        "AlertmanagerFailedReload"
+      ]
+    },
+    {
+      "ticket": "INC-0008",
+      "expected": "AlertmanagerConfigInconsistent",
+      "rank": 4,
+      "got": [
+        "AlertmanagerFailedReload",
+        "AlertmanagerFailedToSendAlerts",
+        "ConfigReloaderSidecarErrors"
+      ]
+    },
+    {
+      "ticket": "INC-0013",
+      "expected": "AlertmanagerMembersInconsistent",
+      "rank": 2,
+      "got": [
+        "AlertmanagerClusterFailedToSendAlerts",
+        "AlertmanagerMembersInconsistent",
+        "AlertmanagerFailedReload"
+      ]
+    },
+    {
+      "ticket": "INC-0015",
+      "expected": "etcdBackendQuotaLowSpace",
+      "rank": 2,
+      "got": [
+        "KubeDaemonSetRolloutStuck",
+        "etcdBackendQuotaLowSpace",
+        "KubeHpaReplicasMismatch"
+      ]
+    },
+    {
+      "ticket": "INC-0016",
+      "expected": "etcdBackendQuotaLowSpace",
+      "rank": 7,
+      "got": [
+        "PrometheusDuplicateTimestamps",
+        "TargetDown",
+        "PrometheusTSDBReloadsFailing"
+      ]
+    },
+    {
+      "ticket": "INC-0017",
+      "expected": "etcdGRPCRequestsSlow",
+      "rank": 4,
+      "got": [
+        "etcdHighNumberOfFailedGRPCRequests",
+        "etcdBackendQuotaLowSpace",
+        "KubeletPodStartUpLatencyHigh"
+      ]
+    },
+    {
+      "ticket": "INC-0019",
+      "expected": "etcdHighFsyncDurations",
+      "rank": 2,
+      "got": [
+        "etcdNoLeader",
+        "etcdHighFsyncDurations",
+        "etcdGRPCRequestsSlow"
+      ]
+    },
+    {
+      "ticket": "INC-0020",
+      "expected": "etcdHighFsyncDurations",
+      "rank": null,
+      "got": [
+        "AlertmanagerFailedToSendAlerts",
+        "PrometheusNotificationQueueRunningFull",
+        "PrometheusErrorSendingAlertsToAnyAlertmanager"
+      ]
+    },
+    {
+      "ticket": "INC-0024",
+      "expected": "etcdInsufficientMembers",
+      "rank": 3,
+      "got": [
+        "etcdHighNumberOfFailedGRPCRequests",
+        "KubeJobFailed",
+        "etcdInsufficientMembers"
+      ]
+    },
+    {
+      "ticket": "INC-0029",
+      "expected": "InfoInhibitor",
+      "rank": 5,
+      "got": [
+        "etcdHighNumberOfFailedGRPCRequests",
+        "KubeAPIErrorBudgetBurn",
+        "KubeAPIDown"
+      ]
+    },
+    {
+      "ticket": "INC-0032",
+      "expected": "NodeNetworkInterfaceFlapping",
+      "rank": 3,
+      "got": [
+        "KubeAPIDown",
+        "KubeAggregatedAPIErrors",
+        "NodeNetworkInterfaceFlapping"
+      ]
+    },
+    {
+      "ticket": "INC-0035",
+      "expected": "Watchdog",
+      "rank": null,
+      "got": [
+        "AlertmanagerClusterFailedToSendAlerts",
+        "AlertmanagerClusterDown",
+        "AlertmanagerFailedToSendAlerts"
+      ]
+    },
+    {
+      "ticket": "INC-0039",
+      "expected": "KubeStateMetricsShardingMismatch",
+      "rank": 27,
+      "got": [
+        "PrometheusDuplicateTimestamps",
+        "PrometheusNotIngestingSamples",
+        "PrometheusTSDBReloadsFailing"
+      ]
+    },
+    {
+      "ticket": "INC-0040",
+      "expected": "KubeStateMetricsShardingMismatch",
+      "rank": 27,
+      "got": [
+        "AlertmanagerFailedToSendAlerts",
+        "PrometheusDuplicateTimestamps",
+        "PrometheusTSDBReloadsFailing"
+      ]
+    },
+    {
+      "ticket": "INC-0042",
+      "expected": "KubeStateMetricsShardsMissing",
+      "rank": 9,
+      "got": [
+        "PrometheusDuplicateTimestamps",
+        "PrometheusTargetSyncFailure",
+        "PrometheusNotIngestingSamples"
+      ]
+    },
+    {
+      "ticket": "INC-0043",
+      "expected": "KubeStateMetricsWatchErrors",
+      "rank": 3,
+      "got": [
+        "etcdGRPCRequestsSlow",
+        "KubeHpaMaxedOut",
+        "KubeStateMetricsWatchErrors"
+      ]
+    },
+    {
+      "ticket": "INC-0044",
+      "expected": "KubeStateMetricsWatchErrors",
+      "rank": 4,
+      "got": [
+        "KubeStateMetricsShardsMissing",
+        "KubeAggregatedAPIErrors",
+        "KubeStateMetricsListErrors"
+      ]
+    },
+    {
+      "ticket": "INC-0045",
+      "expected": "CPUThrottlingHigh",
+      "rank": 2,
+      "got": [
+        "KubeDaemonSetRolloutStuck",
+        "CPUThrottlingHigh",
+        "KubeletPodStartUpLatencyHigh"
+      ]
+    },
+    {
+      "ticket": "INC-0047",
+      "expected": "KubeAggregatedAPIDown",
+      "rank": 4,
+      "got": [
+        "KubeAggregatedAPIErrors",
+        "KubeStateMetricsShardingMismatch",
+        "KubeStateMetricsShardsMissing"
+      ]
+    },
+    {
+      "ticket": "INC-0048",
+      "expected": "KubeAggregatedAPIDown",
+      "rank": 4,
+      "got": [
+        "KubeAggregatedAPIErrors",
+        "KubeHpaMaxedOut",
+        "KubeDeploymentGenerationMismatch"
+      ]
+    },
+    {
+      "ticket": "INC-0049",
+      "expected": "KubeAggregatedAPIErrors",
+      "rank": 4,
+      "got": [
+        "KubeAPIDown",
+        "KubeAPIErrorBudgetBurn",
+        "KubeClientErrors"
+      ]
+    },
+    {
+      "ticket": "INC-0050",
+      "expected": "KubeAggregatedAPIErrors",
+      "rank": 8,
+      "got": [
+        "PrometheusDuplicateTimestamps",
+        "KubeStateMetricsShardsMissing",
+        "KubeStateMetricsShardingMismatch"
+      ]
+    },
+    {
+      "ticket": "INC-0052",
+      "expected": "KubeAPIDown",
+      "rank": 5,
+      "got": [
+        "KubeAggregatedAPIDown",
+        "KubeQuotaExceeded",
+        "KubeClientErrors"
+      ]
+    },
+    {
+      "ticket": "INC-0053",
+      "expected": "KubeAPIErrorBudgetBurn",
+      "rank": 3,
+      "got": [
+        "KubeAggregatedAPIErrors",
+        "KubeAPIDown",
+        "KubeAPIErrorBudgetBurn"
+      ]
+    },
+    {
+      "ticket": "INC-0058",
+      "expected": "KubeClientCertificateExpiration",
+      "rank": 4,
+      "got": [
+        "KubeClientErrors",
+        "KubeAggregatedAPIErrors",
+        "KubeAggregatedAPIDown"
+      ]
+    },
+    {
+      "ticket": "INC-0059",
+      "expected": "KubeClientErrors",
+      "rank": 2,
+      "got": [
+        "KubeAggregatedAPIErrors",
+        "KubeClientErrors",
+        "KubeAPIErrorBudgetBurn"
+      ]
+    },
+    {
+      "ticket": "INC-0064",
+      "expected": "KubeControllerManagerDown",
+      "rank": 10,
+      "got": [
+        "AlertmanagerClusterCrashlooping",
+        "AlertmanagerFailedToSendAlerts",
+        "AlertmanagerClusterFailedToSendAlerts"
+      ]
+    },
+    {
+      "ticket": "INC-0065",
+      "expected": "KubeCPUOvercommit",
+      "rank": 2,
+      "got": [
+        "KubeCPUQuotaOvercommit",
+        "KubeCPUOvercommit",
+        "KubeMemoryOvercommit"
+      ]
+    },
+    {
+      "ticket": "INC-0066",
+      "expected": "KubeCPUOvercommit",
+      "rank": 2,
+      "got": [
+        "KubeCPUQuotaOvercommit",
+        "KubeCPUOvercommit",
+        "KubeMemoryOvercommit"
+      ]
+    },
+    {
+      "ticket": "INC-0071",
+      "expected": "KubeDaemonSetNotScheduled",
+      "rank": 2,
+      "got": [
+        "KubeDaemonSetRolloutStuck",
+        "KubeDaemonSetNotScheduled",
+        "KubeDaemonSetMisScheduled"
+      ]
+    },
+    {
+      "ticket": "INC-0072",
+      "expected": "KubeDaemonSetNotScheduled",
+      "rank": 15,
+      "got": [
+        "PrometheusOperatorNodeLookupErrors",
+        "PrometheusDuplicateTimestamps",
+        "KubeAPIDown"
+      ]
+    },
+    {
+      "ticket": "INC-0075",
+      "expected": "KubeDeploymentGenerationMismatch",
+      "rank": 3,
+      "got": [
+        "KubeDaemonSetRolloutStuck",
+        "KubeDeploymentReplicasMismatch",
+        "KubeDeploymentGenerationMismatch"
+      ]
+    },
+    {
+      "ticket": "INC-0077",
+      "expected": "KubeDeploymentReplicasMismatch",
+      "rank": 2,
+      "got": [
+        "KubeDaemonSetRolloutStuck",
+        "KubeDeploymentReplicasMismatch",
+        "KubeStatefulSetGenerationMismatch"
+      ]
+    },
+    {
+      "ticket": "INC-0078",
+      "expected": "KubeDeploymentReplicasMismatch",
+      "rank": 5,
+      "got": [
+        "KubeHpaReplicasMismatch",
+        "KubeStatefulSetReplicasMismatch",
+        "KubeHpaMaxedOut"
+      ]
+    },
+    {
+      "ticket": "INC-0080",
+      "expected": "KubeHpaMaxedOut",
+      "rank": 2,
+      "got": [
+        "KubeDaemonSetRolloutStuck",
+        "KubeHpaMaxedOut",
+        "KubeHpaReplicasMismatch"
+      ]
+    },
+    {
+      "ticket": "INC-0083",
+      "expected": "KubeJobCompletion",
+      "rank": 2,
+      "got": [
+        "KubeJobFailed",
+        "KubeJobCompletion",
+        "KubeAPIDown"
+      ]
+    },
+    {
+      "ticket": "INC-0084",
+      "expected": "KubeJobCompletion",
+      "rank": 3,
+      "got": [
+        "KubeAPIErrorBudgetBurn",
+        "KubeAPIDown",
+        "KubeJobCompletion"
+      ]
+    },
+    {
+      "ticket": "INC-0087",
+      "expected": "KubeletClientCertificateExpiration",
+      "rank": 2,
+      "got": [
+        "etcdMembersDown",
+        "KubeletClientCertificateExpiration",
+        "KubeletClientCertificateRenewalErrors"
+      ]
+    },
+    {
+      "ticket": "INC-0088",
+      "expected": "KubeletClientCertificateExpiration",
+      "rank": 4,
+      "got": [
+        "KubeletServerCertificateRenewalErrors",
+        "KubeletClientCertificateRenewalErrors",
+        "KubeletServerCertificateExpiration"
+      ]
+    },
+    {
+      "ticket": "INC-0090",
+      "expected": "KubeletClientCertificateRenewalErrors",
+      "rank": 2,
+      "got": [
+        "KubeletServerCertificateRenewalErrors",
+        "KubeletClientCertificateRenewalErrors",
+        "KubeDaemonSetRolloutStuck"
+      ]
+    },
+    {
+      "ticket": "INC-0091",
+      "expected": "KubeletDown",
+      "rank": 3,
+      "got": [
+        "KubeAPIDown",
+        "KubePodCrashLooping",
+        "KubeletDown"
+      ]
+    },
+    {
+      "ticket": "INC-0093",
+      "expected": "KubeletPlegDurationHigh",
+      "rank": 5,
+      "got": [
+        "KubeletClientCertificateRenewalErrors",
+        "KubeletServerCertificateRenewalErrors",
+        "KubeletDown"
+      ]
+    },
+    {
+      "ticket": "INC-0094",
+      "expected": "KubeletPlegDurationHigh",
+      "rank": 11,
+      "got": [
+        "KubeDeploymentGenerationMismatch",
+        "AlertmanagerClusterCrashlooping",
+        "KubeDaemonSetRolloutStuck"
+      ]
+    },
+    {
+      "ticket": "INC-0095",
+      "expected": "KubeletPodStartUpLatencyHigh",
+      "rank": 18,
+      "got": [
+        "KubeDaemonSetRolloutStuck",
+        "KubeContainerWaiting",
+        "KubeAPIDown"
+      ]
+    },
+    {
+      "ticket": "INC-0096",
+      "expected": "KubeletPodStartUpLatencyHigh",
+      "rank": 19,
+      "got": [
+        "KubePodNotReady",
+        "KubePodCrashLooping",
+        "KubeDeploymentGenerationMismatch"
+      ]
+    },
+    {
+      "ticket": "INC-0097",
+      "expected": "KubeletServerCertificateExpiration",
+      "rank": 3,
+      "got": [
+        "KubeletServerCertificateRenewalErrors",
+        "KubeletClientCertificateRenewalErrors",
+        "KubeletServerCertificateExpiration"
+      ]
+    },
+    {
+      "ticket": "INC-0098",
+      "expected": "KubeletServerCertificateExpiration",
+      "rank": 7,
+      "got": [
+        "KubeletClientCertificateRenewalErrors",
+        "KubeletClientCertificateExpiration",
+        "KubeletDown"
+      ]
+    },
+    {
+      "ticket": "INC-0101",
+      "expected": "KubeletTooManyPods",
+      "rank": 2,
+      "got": [
+        "KubeAPITerminatedRequests",
+        "KubeletTooManyPods",
+        "KubeAPIDown"
+      ]
+    },
+    {
+      "ticket": "INC-0102",
+      "expected": "KubeletTooManyPods",
+      "rank": 17,
+      "got": [
+        "KubePodCrashLooping",
+        "PrometheusDuplicateTimestamps",
+        "KubePodNotReady"
+      ]
+    },
+    {
+      "ticket": "INC-0103",
+      "expected": "KubeMemoryOvercommit",
+      "rank": 2,
+      "got": [
+        "KubeCPUQuotaOvercommit",
+        "KubeMemoryOvercommit",
+        "KubeCPUOvercommit"
+      ]
+    },
+    {
+      "ticket": "INC-0105",
+      "expected": "KubeMemoryQuotaOvercommit",
+      "rank": 5,
+      "got": [
+        "KubeCPUQuotaOvercommit",
+        "KubeMemoryOvercommit",
+        "KubeletPodStartUpLatencyHigh"
+      ]
+    },
+    {
+      "ticket": "INC-0107",
+      "expected": "KubeNodeNotReady",
+      "rank": 3,
+      "got": [
+        "KubeDaemonSetRolloutStuck",
+        "KubeAPIDown",
+        "KubeNodeNotReady"
+      ]
+    },
+    {
+      "ticket": "INC-0108",
+      "expected": "KubeNodeNotReady",
+      "rank": 14,
+      "got": [
+        "KubeJobFailed",
+        "KubeDaemonSetNotScheduled",
+        "KubeDaemonSetMisScheduled"
+      ]
+    },
+    {
+      "ticket": "INC-0109",
+      "expected": "KubeNodeReadinessFlapping",
+      "rank": 4,
+      "got": [
+        "etcdMembersDown",
+        "KubeAPIDown",
+        "KubeNodeNotReady"
+      ]
+    },
+    {
+      "ticket": "INC-0111",
+      "expected": "KubeNodeUnreachable",
+      "rank": 3,
+      "got": [
+        "KubePodNotReady",
+        "KubePodCrashLooping",
+        "KubeNodeUnreachable"
+      ]
+    },
+    {
+      "ticket": "INC-0112",
+      "expected": "KubeNodeUnreachable",
+      "rank": 5,
+      "got": [
+        "etcdMembersDown",
+        "PrometheusOperatorNotReady",
+        "etcdInsufficientMembers"
+      ]
+    },
+    {
+      "ticket": "INC-0113",
+      "expected": "KubePersistentVolumeErrors",
+      "rank": 14,
+      "got": [
+        "KubeCPUOvercommit",
+        "KubeCPUQuotaOvercommit",
+        "KubePodNotReady"
+      ]
+    },
+    {
+      "ticket": "INC-0114",
+      "expected": "KubePersistentVolumeErrors",
+      "rank": 6,
+      "got": [
+        "KubeAPIErrorBudgetBurn",
+        "NodeFilesystemSpaceFillingUp",
+        "KubeStateMetricsWatchErrors"
+      ]
+    },
+    {
+      "ticket": "INC-0115",
+      "expected": "KubePersistentVolumeFillingUp",
+      "rank": 2,
+      "got": [
+        "KubeDaemonSetRolloutStuck",
+        "KubePersistentVolumeFillingUp",
+        "KubePodCrashLooping"
+      ]
+    },
+    {
+      "ticket": "INC-0116",
+      "expected": "KubePersistentVolumeFillingUp",
+      "rank": 13,
+      "got": [
+        "etcdGRPCRequestsSlow",
+        "KubeAPIErrorBudgetBurn",
+        "etcdNoLeader"
+      ]
+    },
+    {
+      "ticket": "INC-0117",
+      "expected": "KubePodCrashLooping",
+      "rank": 2,
+      "got": [
+        "KubePodNotReady",
+        "KubePodCrashLooping",
+        "KubeStatefulSetGenerationMismatch"
+      ]
+    },
+    {
+      "ticket": "INC-0118",
+      "expected": "KubePodCrashLooping",
+      "rank": 2,
+      "got": [
+        "KubeDaemonSetRolloutStuck",
+        "KubePodCrashLooping",
+        "KubePodNotReady"
+      ]
+    },
+    {
+      "ticket": "INC-0119",
+      "expected": "KubePodNotReady",
+      "rank": 13,
+      "got": [
+        "KubeDaemonSetRolloutStuck",
+        "KubeHpaMaxedOut",
+        "KubeStatefulSetUpdateNotRolledOut"
+      ]
+    },
+    {
+      "ticket": "INC-0122",
+      "expected": "KubeProxyDown",
+      "rank": 3,
+      "got": [
+        "KubeJobFailed",
+        "AlertmanagerFailedReload",
+        "KubeProxyDown"
+      ]
+    },
+    {
+      "ticket": "INC-0123",
+      "expected": "KubeQuotaAlmostFull",
+      "rank": 10,
+      "got": [
+        "KubeDeploymentGenerationMismatch",
+        "KubeStatefulSetGenerationMismatch",
+        "KubeDeploymentReplicasMismatch"
+      ]
+    },
+    {
+      "ticket": "INC-0124",
+      "expected": "KubeQuotaAlmostFull",
+      "rank": null,
+      "got": [
+        "KubeCPUQuotaOvercommit",
+        "KubeHpaReplicasMismatch",
+        "KubeDeploymentGenerationMismatch"
+      ]
+    },
+    {
+      "ticket": "INC-0125",
+      "expected": "KubeQuotaExceeded",
+      "rank": 24,
+      "got": [
+        "KubeHpaReplicasMismatch",
+        "KubeDeploymentGenerationMismatch",
+        "KubeCPUQuotaOvercommit"
+      ]
+    },
+    {
+      "ticket": "INC-0126",
+      "expected": "KubeQuotaExceeded",
+      "rank": 8,
+      "got": [
+        "KubeDeploymentGenerationMismatch",
+        "KubeDeploymentReplicasMismatch",
+        "KubeDaemonSetNotScheduled"
+      ]
+    },
+    {
+      "ticket": "INC-0127",
+      "expected": "KubeQuotaFullyUsed",
+      "rank": 12,
+      "got": [
+        "KubeHpaReplicasMismatch",
+        "KubeHpaMaxedOut",
+        "KubeDeploymentGenerationMismatch"
+      ]
+    },
+    {
+      "ticket": "INC-0128",
+      "expected": "KubeQuotaFullyUsed",
+      "rank": 8,
+      "got": [
+        "KubeCPUQuotaOvercommit",
+        "KubeDeploymentGenerationMismatch",
+        "KubeQuotaAlmostFull"
+      ]
+    },
+    {
+      "ticket": "INC-0130",
+      "expected": "KubeSchedulerDown",
+      "rank": 20,
+      "got": [
+        "KubeAPITerminatedRequests",
+        "KubeAggregatedAPIErrors",
+        "KubeDeploymentGenerationMismatch"
+      ]
+    },
+    {
+      "ticket": "INC-0132",
+      "expected": "KubeStatefulSetGenerationMismatch",
+      "rank": 7,
+      "got": [
+        "KubeHpaReplicasMismatch",
+        "KubeStatefulSetUpdateNotRolledOut",
+        "KubeStatefulSetReplicasMismatch"
+      ]
+    },
+    {
+      "ticket": "INC-0133",
+      "expected": "KubeStatefulSetReplicasMismatch",
+      "rank": 3,
+      "got": [
+        "KubeStatefulSetGenerationMismatch",
+        "KubeStatefulSetUpdateNotRolledOut",
+        "KubeStatefulSetReplicasMismatch"
+      ]
+    },
+    {
+      "ticket": "INC-0136",
+      "expected": "KubeStatefulSetUpdateNotRolledOut",
+      "rank": 8,
+      "got": [
+        "KubeHpaReplicasMismatch",
+        "KubeStatefulSetGenerationMismatch",
+        "KubeHpaMaxedOut"
+      ]
+    },
+    {
+      "ticket": "INC-0137",
+      "expected": "KubeVersionMismatch",
+      "rank": 15,
+      "got": [
+        "KubePodCrashLooping",
+        "AlertmanagerClusterCrashlooping",
+        "KubeDaemonSetRolloutStuck"
+      ]
+    },
+    {
+      "ticket": "INC-0138",
+      "expected": "KubeVersionMismatch",
+      "rank": 8,
+      "got": [
+        "KubeNodeReadinessFlapping",
+        "KubeNodeUnreachable",
+        "AlertmanagerClusterFailedToSendAlerts"
+      ]
+    },
+    {
+      "ticket": "INC-0139",
+      "expected": "NodeClockNotSynchronising",
+      "rank": 10,
+      "got": [
+        "KubeletServerCertificateRenewalErrors",
+        "KubeletClientCertificateRenewalErrors",
+        "AlertmanagerFailedReload"
+      ]
+    },
+    {
+      "ticket": "INC-0140",
+      "expected": "NodeClockNotSynchronising",
+      "rank": 5,
+      "got": [
+        "KubeletServerCertificateRenewalErrors",
+        "KubeletClientCertificateRenewalErrors",
+        "KubePodNotReady"
+      ]
+    },
+    {
+      "ticket": "INC-0141",
+      "expected": "NodeClockSkewDetected",
+      "rank": 2,
+      "got": [
+        "KubeAggregatedAPIErrors",
+        "NodeClockSkewDetected",
+        "KubeDeploymentGenerationMismatch"
+      ]
+    },
+    {
+      "ticket": "INC-0142",
+      "expected": "NodeClockSkewDetected",
+      "rank": 3,
+      "got": [
+        "PrometheusOutOfOrderTimestamps",
+        "PrometheusDuplicateTimestamps",
+        "NodeClockSkewDetected"
+      ]
+    },
+    {
+      "ticket": "INC-0143",
+      "expected": "NodeFileDescriptorLimit",
+      "rank": 19,
+      "got": [
+        "KubeDaemonSetRolloutStuck",
+        "KubeDeploymentGenerationMismatch",
+        "KubePodCrashLooping"
+      ]
+    },
+    {
+      "ticket": "INC-0144",
+      "expected": "NodeFileDescriptorLimit",
+      "rank": 3,
+      "got": [
+        "KubeCPUQuotaOvercommit",
+        "KubeCPUOvercommit",
+        "NodeFileDescriptorLimit"
+      ]
+    },
+    {
+      "ticket": "INC-0145",
+      "expected": "NodeFilesystemAlmostOutOfFiles",
+      "rank": null,
+      "got": [
+        "KubeDaemonSetRolloutStuck",
+        "KubeJobFailed",
+        "PrometheusDuplicateTimestamps"
+      ]
+    },
+    {
+      "ticket": "INC-0146",
+      "expected": "NodeFilesystemAlmostOutOfFiles",
+      "rank": 6,
+      "got": [
+        "KubeNodeUnreachable",
+        "KubeNodeReadinessFlapping",
+        "AlertmanagerClusterCrashlooping"
+      ]
+    },
+    {
+      "ticket": "INC-0147",
+      "expected": "NodeFilesystemAlmostOutOfSpace",
+      "rank": 22,
+      "got": [
+        "KubeAPIDown",
+        "KubePodCrashLooping",
+        "KubePodNotReady"
+      ]
+    },
+    {
+      "ticket": "INC-0148",
+      "expected": "NodeFilesystemAlmostOutOfSpace",
+      "rank": 2,
+      "got": [
+        "KubeletPodStartUpLatencyHigh",
+        "NodeFilesystemAlmostOutOfSpace",
+        "NodeFilesystemSpaceFillingUp"
+      ]
+    },
+    {
+      "ticket": "INC-0149",
+      "expected": "NodeFilesystemFilesFillingUp",
+      "rank": 23,
+      "got": [
+        "KubePodCrashLooping",
+        "KubeCPUQuotaOvercommit",
+        "KubePodNotReady"
+      ]
+    },
+    {
+      "ticket": "INC-0150",
+      "expected": "NodeFilesystemFilesFillingUp",
+      "rank": 3,
+      "got": [
+        "KubePersistentVolumeErrors",
+        "NodeFilesystemAlmostOutOfFiles",
+        "NodeFilesystemFilesFillingUp"
+      ]
+    },
+    {
+      "ticket": "INC-0151",
+      "expected": "NodeFilesystemSpaceFillingUp",
+      "rank": 19,
+      "got": [
+        "KubePodNotReady",
+        "KubeDeploymentGenerationMismatch",
+        "KubeDaemonSetRolloutStuck"
+      ]
+    },
+    {
+      "ticket": "INC-0152",
+      "expected": "NodeFilesystemSpaceFillingUp",
+      "rank": 12,
+      "got": [
+        "KubeAggregatedAPIErrors",
+        "KubeAPIErrorBudgetBurn",
+        "KubeAPITerminatedRequests"
+      ]
+    },
+    {
+      "ticket": "INC-0156",
+      "expected": "NodeNetworkReceiveErrs",
+      "rank": 2,
+      "got": [
+        "KubeAPIDown",
+        "NodeNetworkReceiveErrs",
+        "KubeDaemonSetNotScheduled"
+      ]
+    },
+    {
+      "ticket": "INC-0157",
+      "expected": "NodeNetworkTransmitErrs",
+      "rank": 5,
+      "got": [
+        "PrometheusNotificationQueueRunningFull",
+        "NodeNetworkReceiveErrs",
+        "etcdHighNumberOfFailedGRPCRequests"
+      ]
+    },
+    {
+      "ticket": "INC-0158",
+      "expected": "NodeNetworkTransmitErrs",
+      "rank": 16,
+      "got": [
+        "KubeStateMetricsWatchErrors",
+        "KubeStateMetricsShardingMismatch",
+        "KubeAggregatedAPIErrors"
+      ]
+    },
+    {
+      "ticket": "INC-0159",
+      "expected": "NodeRAIDDegraded",
+      "rank": 10,
+      "got": [
+        "KubeDaemonSetRolloutStuck",
+        "KubeDaemonSetMisScheduled",
+        "KubeDaemonSetNotScheduled"
+      ]
+    },
+    {
+      "ticket": "INC-0160",
+      "expected": "NodeRAIDDegraded",
+      "rank": 5,
+      "got": [
+        "KubeletPodStartUpLatencyHigh",
+        "NodeNetworkReceiveErrs",
+        "NodeNetworkTransmitErrs"
+      ]
+    },
+    {
+      "ticket": "INC-0161",
+      "expected": "NodeRAIDDiskFailure",
+      "rank": 2,
+      "got": [
+        "NodeRAIDDegraded",
+        "NodeRAIDDiskFailure",
+        "KubeNodeUnreachable"
+      ]
+    },
+    {
+      "ticket": "INC-0164",
+      "expected": "NodeTextFileCollectorScrapeError",
+      "rank": 13,
+      "got": [
+        "PrometheusTSDBReloadsFailing",
+        "PrometheusNotIngestingSamples",
+        "PrometheusTSDBCompactionsFailing"
+      ]
+    },
+    {
+      "ticket": "INC-0165",
+      "expected": "ConfigReloaderSidecarErrors",
+      "rank": 8,
+      "got": [
+        "PrometheusDuplicateTimestamps",
+        "PrometheusOperatorNodeLookupErrors",
+        "PrometheusBadConfig"
+      ]
+    },
+    {
+      "ticket": "INC-0166",
+      "expected": "ConfigReloaderSidecarErrors",
+      "rank": 2,
+      "got": [
+        "AlertmanagerFailedReload",
+        "ConfigReloaderSidecarErrors",
+        "KubeClientErrors"
+      ]
+    },
+    {
+      "ticket": "INC-0167",
+      "expected": "PrometheusOperatorListErrors",
+      "rank": 5,
+      "got": [
+        "PrometheusDuplicateTimestamps",
+        "PrometheusOperatorNodeLookupErrors",
+        "TargetDown"
+      ]
+    },
+    {
+      "ticket": "INC-0168",
+      "expected": "PrometheusOperatorListErrors",
+      "rank": 3,
+      "got": [
+        "PrometheusOperatorSyncFailed",
+        "PrometheusTSDBReloadsFailing",
+        "PrometheusOperatorListErrors"
+      ]
+    },
+    {
+      "ticket": "INC-0171",
+      "expected": "PrometheusOperatorNotReady",
+      "rank": 7,
+      "got": [
+        "PrometheusDuplicateTimestamps",
+        "PrometheusOperatorNodeLookupErrors",
+        "TargetDown"
+      ]
+    },
+    {
+      "ticket": "INC-0172",
+      "expected": "PrometheusOperatorNotReady",
+      "rank": 3,
+      "got": [
+        "PrometheusDuplicateTimestamps",
+        "TargetDown",
+        "PrometheusOperatorNotReady"
+      ]
+    },
+    {
+      "ticket": "INC-0173",
+      "expected": "PrometheusOperatorReconcileErrors",
+      "rank": 2,
+      "got": [
+        "KubeAPIDown",
+        "PrometheusOperatorReconcileErrors",
+        "PrometheusDuplicateTimestamps"
+      ]
+    },
+    {
+      "ticket": "INC-0176",
+      "expected": "PrometheusOperatorRejectedResources",
+      "rank": 5,
+      "got": [
+        "AlertmanagerFailedToSendAlerts",
+        "AlertmanagerClusterFailedToSendAlerts",
+        "AlertmanagerFailedReload"
+      ]
+    },
+    {
+      "ticket": "INC-0177",
+      "expected": "PrometheusOperatorSyncFailed",
+      "rank": 4,
+      "got": [
+        "PrometheusOperatorReconcileErrors",
+        "PrometheusDuplicateTimestamps",
+        "PrometheusOperatorNodeLookupErrors"
+      ]
+    },
+    {
+      "ticket": "INC-0179",
+      "expected": "PrometheusOperatorWatchErrors",
+      "rank": 8,
+      "got": [
+        "PrometheusOperatorSyncFailed",
+        "PrometheusDuplicateTimestamps",
+        "KubeAPIDown"
+      ]
+    },
+    {
+      "ticket": "INC-0180",
+      "expected": "PrometheusOperatorWatchErrors",
+      "rank": 6,
+      "got": [
+        "PrometheusOperatorNodeLookupErrors",
+        "PrometheusDuplicateTimestamps",
+        "PrometheusOperatorSyncFailed"
+      ]
+    },
+    {
+      "ticket": "INC-0181",
+      "expected": "PrometheusBadConfig",
+      "rank": 2,
+      "got": [
+        "PrometheusTSDBReloadsFailing",
+        "PrometheusBadConfig",
+        "PrometheusDuplicateTimestamps"
+      ]
+    },
+    {
+      "ticket": "INC-0182",
+      "expected": "PrometheusBadConfig",
+      "rank": 11,
+      "got": [
+        "PrometheusMissingRuleEvaluations",
+        "PrometheusNotIngestingSamples",
+        "PrometheusTSDBReloadsFailing"
+      ]
+    },
+    {
+      "ticket": "INC-0186",
+      "expected": "PrometheusErrorSendingAlertsToAnyAlertmanager",
+      "rank": 5,
+      "got": [
+        "AlertmanagerFailedToSendAlerts",
+        "PrometheusTargetSyncFailure",
+        "KubeAPIDown"
+      ]
+    },
+    {
+      "ticket": "INC-0187",
+      "expected": "PrometheusErrorSendingAlertsToSomeAlertmanagers",
+      "rank": 6,
+      "got": [
+        "AlertmanagerFailedToSendAlerts",
+        "PrometheusNotConnectedToAlertmanagers",
+        "KubeAPIDown"
+      ]
+    },
+    {
+      "ticket": "INC-0188",
+      "expected": "PrometheusErrorSendingAlertsToSomeAlertmanagers",
+      "rank": 2,
+      "got": [
+        "PrometheusErrorSendingAlertsToAnyAlertmanager",
+        "PrometheusErrorSendingAlertsToSomeAlertmanagers",
+        "PrometheusNotConnectedToAlertmanagers"
+      ]
+    },
+    {
+      "ticket": "INC-0189",
+      "expected": "PrometheusLabelLimitHit",
+      "rank": 2,
+      "got": [
+        "PrometheusDuplicateTimestamps",
+        "PrometheusLabelLimitHit",
+        "TargetDown"
+      ]
+    },
+    {
+      "ticket": "INC-0190",
+      "expected": "PrometheusLabelLimitHit",
+      "rank": 3,
+      "got": [
+        "PrometheusErrorSendingAlertsToAnyAlertmanager",
+        "PrometheusErrorSendingAlertsToSomeAlertmanagers",
+        "PrometheusLabelLimitHit"
+      ]
+    },
+    {
+      "ticket": "INC-0192",
+      "expected": "PrometheusMissingRuleEvaluations",
+      "rank": 16,
+      "got": [
+        "PrometheusNotificationQueueRunningFull",
+        "KubeAPIDown",
+        "PrometheusErrorSendingAlertsToAnyAlertmanager"
+      ]
+    },
+    {
+      "ticket": "INC-0194",
+      "expected": "PrometheusNotConnectedToAlertmanagers",
+      "rank": 4,
+      "got": [
+        "AlertmanagerFailedToSendAlerts",
+        "PrometheusErrorSendingAlertsToAnyAlertmanager",
+        "PrometheusErrorSendingAlertsToSomeAlertmanagers"
+      ]
+    },
+    {
+      "ticket": "INC-0197",
+      "expected": "PrometheusNotIngestingSamples",
+      "rank": 2,
+      "got": [
+        "PrometheusDuplicateTimestamps",
+        "PrometheusNotIngestingSamples",
+        "PrometheusTSDBReloadsFailing"
+      ]
+    },
+    {
+      "ticket": "INC-0199",
+      "expected": "PrometheusOutOfOrderTimestamps",
+      "rank": 13,
+      "got": [
+        "PrometheusDuplicateTimestamps",
+        "AlertmanagerFailedToSendAlerts",
+        "PrometheusTSDBReloadsFailing"
+      ]
+    },
+    {
+      "ticket": "INC-0200",
+      "expected": "PrometheusOutOfOrderTimestamps",
+      "rank": 15,
+      "got": [
+        "PrometheusTSDBReloadsFailing",
+        "PrometheusNotIngestingSamples",
+        "PrometheusTSDBCompactionsFailing"
+      ]
+    },
+    {
+      "ticket": "INC-0201",
+      "expected": "PrometheusRemoteStorageFailures",
+      "rank": 4,
+      "got": [
+        "PrometheusDuplicateTimestamps",
+        "PrometheusRemoteWriteBehind",
+        "PrometheusRemoteWriteDesiredShards"
+      ]
+    },
+    {
+      "ticket": "INC-0202",
+      "expected": "PrometheusRemoteStorageFailures",
+      "rank": 4,
+      "got": [
+        "PrometheusDuplicateTimestamps",
+        "PrometheusTSDBReloadsFailing",
+        "PrometheusTSDBCompactionsFailing"
+      ]
+    },
+    {
+      "ticket": "INC-0206",
+      "expected": "PrometheusRemoteWriteDesiredShards",
+      "rank": 11,
+      "got": [
+        "PrometheusNotIngestingSamples",
+        "PrometheusTargetLimitHit",
+        "PrometheusLabelLimitHit"
+      ]
+    },
+    {
+      "ticket": "INC-0207",
+      "expected": "PrometheusRuleFailures",
+      "rank": 2,
+      "got": [
+        "AlertmanagerFailedToSendAlerts",
+        "PrometheusRuleFailures",
+        "PrometheusTSDBReloadsFailing"
+      ]
+    },
+    {
+      "ticket": "INC-0208",
+      "expected": "PrometheusRuleFailures",
+      "rank": 2,
+      "got": [
+        "AlertmanagerFailedToSendAlerts",
+        "PrometheusRuleFailures",
+        "PrometheusMissingRuleEvaluations"
+      ]
+    },
+    {
+      "ticket": "INC-0209",
+      "expected": "PrometheusTargetLimitHit",
+      "rank": 6,
+      "got": [
+        "PrometheusDuplicateTimestamps",
+        "PrometheusTSDBReloadsFailing",
+        "PrometheusNotIngestingSamples"
+      ]
+    },
+    {
+      "ticket": "INC-0210",
+      "expected": "PrometheusTargetLimitHit",
+      "rank": 2,
+      "got": [
+        "PrometheusTargetSyncFailure",
+        "PrometheusTargetLimitHit",
+        "TargetDown"
+      ]
+    },
+    {
+      "ticket": "INC-0212",
+      "expected": "PrometheusTargetSyncFailure",
+      "rank": 2,
+      "got": [
+        "PrometheusDuplicateTimestamps",
+        "PrometheusTargetSyncFailure",
+        "PrometheusOperatorNodeLookupErrors"
+      ]
+    },
+    {
+      "ticket": "INC-0214",
+      "expected": "PrometheusTSDBCompactionsFailing",
+      "rank": 5,
+      "got": [
+        "PrometheusRemoteWriteBehind",
+        "PrometheusTSDBReloadsFailing",
+        "PrometheusRemoteStorageFailures"
+      ]
+    }
+  ]
+}

@@ -3,13 +3,15 @@ import hashlib
 import math
 import re
 
+import pytest
 from fastapi.testclient import TestClient
 from qdrant_client import QdrantClient
 
 from app.ingestion.schema import Document
 from app.main import app
 from app.rag.chunking import MAX_CHARS, chunk_document
-from app.rag.vector_store import VectorStore, get_vector_store
+from app.rag.retriever import Retriever, get_retriever
+from app.rag.vector_store import VectorStore
 
 RUNBOOK = Document(
     id="runbook-1", source_type="runbook", title="Kube Pod Crash Looping [KubePodCrashLooping]",
@@ -38,10 +40,34 @@ class FakeEmbedder:
         return self._vec(text)
 
 
-def make_store(docs: list[Document]) -> VectorStore:
+class FakeSparseEmbedder:
+    """Word -> index with count as weight; Qdrant adds the IDF part, like real BM25."""
+
+    def _vec(self, text: str):
+        counts = {}
+        for word in re.findall(r"[a-z]+", text.lower()):
+            idx = int(hashlib.md5(word.encode()).hexdigest(), 16) % 100_000
+            counts[idx] = counts.get(idx, 0) + 1.0
+        return list(counts), list(counts.values())
+
+    def embed_documents(self, texts):
+        return [self._vec(t) for t in texts]
+
+    def embed_query(self, text):
+        return self._vec(text)
+
+
+class ReverseReranker:
+    """Fake reranker that reverses the order, so tests can see that reranking happened."""
+
+    def rerank(self, query, hits, top_k):
+        return list(reversed(hits))[:top_k]
+
+
+def make_store(docs: list[Document], sparse: bool = True) -> VectorStore:
     from app.rag.chunking import chunk_documents
 
-    store = VectorStore(QdrantClient(":memory:"), "test", FakeEmbedder())
+    store = VectorStore(QdrantClient(":memory:"), "test", FakeEmbedder(), FakeSparseEmbedder() if sparse else None)
     store.recreate()
     store.upsert(chunk_documents(docs))
     return store
@@ -83,11 +109,33 @@ def test_search_filters_by_source_type():
     assert store.search("pod restarts", top_k=5, service="other-service") == []
 
 
+def test_sparse_and_hybrid_search():
+    store = make_store([RUNBOOK])
+    for mode in ("sparse", "hybrid"):
+        assert store.search("increase memory limit", top_k=1, mode=mode)[0].section == "Mitigation"
+
+
+def test_sparse_mode_without_sparse_embedder_fails_clearly():
+    store = make_store([RUNBOOK], sparse=False)
+    with pytest.raises(ValueError, match="sparse embedder"):
+        store.search("memory", mode="hybrid")
+
+
+def test_retriever_reranks_only_when_asked():
+    retriever = Retriever(make_store([RUNBOOK]), ReverseReranker(), mode="dense", rerank=False)
+    plain = retriever.retrieve("increase memory limit", top_k=2)
+    reranked = retriever.retrieve("increase memory limit", top_k=2, rerank=True)
+    assert [h.chunk_id for h in reranked] == [h.chunk_id for h in reversed(plain)]
+
+
 def test_search_endpoint():
-    app.dependency_overrides[get_vector_store] = lambda: make_store([RUNBOOK])
+    app.dependency_overrides[get_retriever] = lambda: Retriever(make_store([RUNBOOK]), None, mode="hybrid",
+                                                                rerank=False)
     try:
         r = TestClient(app).post("/search", json={"query": "increase memory limit", "top_k": 1})
         assert r.status_code == 200
-        assert r.json()["hits"][0]["section"] == "Mitigation"
+        body = r.json()
+        assert body["hits"][0]["section"] == "Mitigation"
+        assert body["mode"] == "hybrid" and body["reranked"] is False
     finally:
         app.dependency_overrides.clear()

@@ -33,21 +33,30 @@ python -m app.ingestion.pipeline         # -> data/processed/documents.jsonl
 
 ```bash
 docker compose -f infra/docker-compose.yml up -d   # Qdrant server (or set QDRANT_PATH in .env for no-Docker mode)
-python -m app.rag.index                            # chunk + embed (bge-small, CPU) + store in Qdrant
-python -m eval.retrieval_eval --name dense_baseline
+python -m app.rag.index                            # chunk + embed (dense bge-small + sparse BM25) into Qdrant
+python -m eval.retrieval_eval --ablation           # benchmark every retrieval configuration
 ```
 
 ## Results so far
 
-Ticket -> runbook retrieval on 212 synthetic tickets (search over 108 runbooks):
+Ticket -> runbook retrieval on 212 synthetic tickets (search over 108 runbooks, CPU only, embedded Qdrant):
 
-| Method | Recall@1 | Recall@3 | Recall@5 | Recall@10 | MRR | p50 latency |
+| Method | R@1 | R@3 | R@5 | R@10 | MRR | p50 latency |
 |---|---|---|---|---|---|---|
-| Dense (bge-small-en-v1.5) | 0.481 | 0.689 | 0.764 | 0.840 | 0.608 | 60 ms |
+| Dense (bge-small-en-v1.5) | **0.481** | 0.689 | 0.764 | 0.840 | 0.608 | 51 ms |
+| Sparse (BM25) | 0.311 | 0.585 | 0.731 | 0.854 | 0.488 | 61 ms |
+| **Hybrid (dense + BM25, RRF)** | 0.467 | **0.717** | **0.802** | **0.915** | **0.614** | 119 ms |
+| Dense + MiniLM reranker | 0.387 | 0.618 | 0.741 | 0.835 | 0.538 | 4963 ms |
+| Hybrid + MiniLM reranker | 0.382 | 0.623 | 0.750 | 0.854 | 0.539 | 5198 ms |
 
-Most errors are confusions between sibling alerts (e.g. `etcdInsufficientMembers` vs `etcdNoLeader`),
-where the distinguishing signal is a specific technical term. Hypothesis for Step 5: keyword (BM25)
-search and a cross-encoder reranker will fix many of these.
+Findings:
+1. **Hybrid search is the best default.** BM25 alone is weak at the top, but it finds different correct
+   runbooks than dense search, so fusing them lifts Recall@10 from 0.840 to 0.915.
+2. **A general-purpose reranker hurts.** `ms-marco-MiniLM-L-6-v2` (trained on web search) lowered MRR
+   from 0.614 to 0.539 and pushed 39 correct #1 results down, while adding ~5 s per query on CPU.
+   Domain mismatch: it was never trained on logs and Kubernetes terminology. Reranking is therefore
+   off by default (`RERANK=false`).
+3. The remaining errors are mostly sibling alerts (e.g. `etcdInsufficientMembers` vs `etcdNoLeader`).
 
 ## Project layout
 
@@ -72,7 +81,7 @@ tests/          pytest tests
 - [x] Step 2: LLM router (Ollama + Groq, with automatic fallback)
 - [x] Step 3: Data collection and ingestion
 - [x] Step 4: Embeddings and Qdrant vector store
-- [ ] Step 5: Hybrid retrieval and reranking
+- [x] Step 5: Hybrid retrieval and reranking
 - [ ] Step 6: `/ask` endpoint with citations
 - [ ] Step 7: LangGraph agent with a verification step
 - [ ] Step 8: UI, auth, observability
