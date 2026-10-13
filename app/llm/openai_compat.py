@@ -9,11 +9,13 @@ from app.llm.base import LLMError, LLMProvider, LLMResponse, Message
 class OpenAICompatProvider(LLMProvider):
     name = "openai_compat"
 
-    def __init__(self, base_url: str, api_key: str, model: str, transport: httpx.AsyncBaseTransport | None = None):
+    def __init__(self, base_url: str, api_key: str, model: str, transport: httpx.AsyncBaseTransport | None = None,
+                 extra_params: dict | None = None):
         self.base_url = base_url.rstrip("/")
         self.api_key = api_key
         self.model = model
         self._transport = transport
+        self.extra_params = extra_params or {}  # provider-specific options, e.g. {"reasoning_effort": "low"}
 
     async def generate(self, messages: list[Message], temperature: float = 0.2, max_tokens: int = 1024) -> LLMResponse:
         if not self.api_key:
@@ -24,6 +26,7 @@ class OpenAICompatProvider(LLMProvider):
             "messages": [m.model_dump() for m in messages],
             "temperature": temperature,
             "max_tokens": max_tokens,
+            **self.extra_params,
         }
         headers = {"Authorization": f"Bearer {self.api_key}"}
         start = time.perf_counter()

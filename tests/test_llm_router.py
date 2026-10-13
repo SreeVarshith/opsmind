@@ -72,6 +72,19 @@ def test_missing_api_key_gives_clear_error():
         run(make_router(fake_ollama, fake_groq, key="").generate(MSGS, provider="openai_compat", fallback=False))
 
 
+def test_extra_params_are_sent():
+    seen = {}
+
+    def capture(request: httpx.Request) -> httpx.Response:
+        seen.update(__import__("json").loads(request.content))
+        return httpx.Response(200, json={"choices": [{"message": {"content": "ok"}}]})
+
+    llm = OpenAICompatProvider("http://groq", "test-key", "m", transport=httpx.MockTransport(capture),
+                               extra_params={"reasoning_effort": "low"})
+    run(llm.generate(MSGS))
+    assert seen["reasoning_effort"] == "low"
+
+
 def test_chat_endpoint():
     app.dependency_overrides[get_router] = lambda: make_router(fake_ollama, fake_groq)
     try:

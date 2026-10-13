@@ -7,4 +7,8 @@ __pycache__/
 data/raw/*
 data/processed/*
 !data/**/.gitkeep
+# Generated tickets are kept: they are our labelled evaluation set and cost API quota to recreate
+!data/raw/tickets/
+data/raw/tickets/*
+!data/raw/tickets/tickets.jsonl
 qdrant_storage/

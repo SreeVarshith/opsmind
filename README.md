@@ -14,6 +14,21 @@ uvicorn app.main:app --reload
 
 Then open http://localhost:8000/docs.
 
+## Data
+
+```bash
+python scripts/download_data.py          # public runbooks, postmortems and logs (~3 MB)
+python -m scripts.generate_tickets       # synthetic tickets via the free Groq API (resumable)
+python -m app.ingestion.pipeline         # -> data/processed/documents.jsonl
+```
+
+| Source | What it is | Documents |
+|---|---|---|
+| [prometheus-operator/runbooks](https://github.com/prometheus-operator/runbooks) | Real on-call runbooks for Kubernetes alerts | 108 |
+| [danluu/post-mortems](https://github.com/danluu/post-mortems) | Public incident postmortems from real companies | 239 |
+| [logpai/loghub](https://github.com/logpai/loghub) | Logs from 8 systems, grouped by event template | 408 |
+| Synthetic tickets | LLM-written tickets, each linked to the runbook it came from (evaluation labels) | ~216 |
+
 ## Project layout
 
 ```
@@ -23,8 +38,9 @@ app/
   ingestion/    parsers for runbooks, tickets and logs
   rag/          chunking, embeddings, retrieval, reranking
   agents/       LangGraph incident-resolution agent
-  llm/          LLM provider router (Ollama / Claude)
-data/           raw and processed datasets (not committed)
+  llm/          LLM provider router (Ollama / Groq)
+data/           raw and processed datasets (only tickets are committed)
+scripts/        data download, ticket generation, LLM comparison
 eval/           evaluation sets and benchmark scripts
 infra/          docker-compose and monitoring config
 tests/          pytest tests
@@ -34,7 +50,7 @@ tests/          pytest tests
 
 - [x] Step 1: Project setup and FastAPI skeleton
 - [x] Step 2: LLM router (Ollama + Groq, with automatic fallback)
-- [ ] Step 3: Data collection and ingestion
+- [x] Step 3: Data collection and ingestion
 - [ ] Step 4: Embeddings and Qdrant vector store
 - [ ] Step 5: Hybrid retrieval and reranking
 - [ ] Step 6: `/ask` endpoint with citations
