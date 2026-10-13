@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     # Any OpenAI-compatible API. Defaults point at Groq.
     api_base_url: str = "https://api.groq.com/openai/v1"
     api_key: str = ""
-    api_model: str = "llama-3.3-70b-versatile"
+    api_model: str = "openai/gpt-oss-120b"
 
     # Retrieval
     embedding_model: str = "BAAI/bge-small-en-v1.5"
