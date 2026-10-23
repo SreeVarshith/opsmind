@@ -1,7 +1,7 @@
 """FastAPI entry point. Run with: uvicorn app.main:app --reload"""
 from fastapi import FastAPI
 
-from app.api.routes import ask, chat, documents, health, search
+from app.api.routes import agent, ask, chat, documents, health, search
 from app.core.config import get_settings
 
 settings = get_settings()
@@ -17,3 +17,4 @@ app.include_router(chat.router)
 app.include_router(documents.router)
 app.include_router(search.router)
 app.include_router(ask.router)
+app.include_router(agent.router)

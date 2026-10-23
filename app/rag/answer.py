@@ -105,22 +105,49 @@ def extract_citations(answer: str) -> list[int]:
     return list(dict.fromkeys(numbers))
 
 
-def citation_coverage(answer: str) -> float:
-    """Share of claim sentences that carry at least one citation (0.0 - 1.0).
+def split_claims(answer: str) -> list[str]:
+    """Split an answer into claims: sentences or list items of real content.
 
-    A "claim" is a sentence or list item of real content; headings like **How to fix** and very
-    short fragments are skipped. Low coverage means much of the answer cannot be traced to a source.
+    Headings like **How to fix**, code blocks and very short fragments are skipped. Inline code is
+    kept, because a claim such as "Run `kubectl rollout restart`" is something a source can support.
     """
+    text = re.sub(r"```.*?```", " ", answer, flags=re.DOTALL)
     claims = []
-    for line in _prose(answer).splitlines():
+    for line in text.splitlines():
         line = re.sub(r"^\s*(?:[-*]|\d+\.)\s+", "", line).strip()       # list markers
         if not line or re.fullmatch(r"(#+.*|\*\*[^*]+\*\*:?)", line):   # empty or heading
             continue
         line = re.sub(r"^\*\*[^*]+\*\*:?\s*", "", line)                 # inline bold label
-        claims += [s for s in re.split(r"(?<=[.!?])\s+(?=[A-Z])", line) if len(s) >= 15]
+        claims += [s.strip() for s in re.split(r"(?<=[.!?])\s+(?=[A-Z])", line) if len(s.strip()) >= 15]
+    return claims
+
+
+def has_citation(claim: str) -> bool:
+    return bool(extract_citations(claim))
+
+
+def citation_coverage(answer: str) -> float:
+    """Share of claim sentences that carry at least one citation (0.0 - 1.0).
+    Low coverage means much of the answer cannot be traced to a source."""
+    claims = split_claims(answer)
     if not claims:
         return 0.0
-    return round(sum(1 for c in claims if CITATION.search(c)) / len(claims), 3)
+    return round(sum(1 for c in claims if has_citation(c)) / len(claims), 3)
+
+
+def build_messages(question: str, hits: list[SearchHit], feedback: str | None = None) -> list[Message]:
+    """The answering prompt. `feedback` lets the agent ask for a corrected second draft."""
+    user = f"Sources:\n\n{format_sources(hits)}\n\n---\nQuestion: {question}"
+    if feedback:
+        user += f"\n\n---\nReviewer feedback on your previous draft (fix these problems):\n{feedback}"
+    return [Message(role="system", content=SYSTEM_PROMPT), Message(role="user", content=user)]
+
+
+def check_citations(text: str, n_sources: int) -> tuple[list[int], list[int]]:
+    """(valid, invalid) citation numbers in order of appearance."""
+    cited = extract_citations(text)
+    valid = [n for n in cited if 1 <= n <= n_sources]
+    return valid, [n for n in cited if n not in valid]
 
 
 def to_citation(n: int, h: SearchHit) -> Citation:
@@ -162,16 +189,10 @@ class Answerer:
                              provider=None, model=None,
                              timings=Timings(retrieval_ms=retrieval_ms, generation_ms=0, total_ms=retrieval_ms))
 
-        messages = [
-            Message(role="system", content=SYSTEM_PROMPT),
-            Message(role="user", content=f"Sources:\n\n{format_sources(hits)}\n\n---\nQuestion: {question}"),
-        ]
-        res = await self.llm.generate(messages, provider=provider, temperature=0.1, max_tokens=self.max_tokens)
+        res = await self.llm.generate(build_messages(question, hits), provider=provider, temperature=0.1,
+                                      max_tokens=self.max_tokens)
         text = normalize_citations(res.text).strip()
-
-        cited = extract_citations(text)
-        valid = [n for n in cited if 1 <= n <= len(hits)]
-        invalid = [n for n in cited if n not in valid]
+        valid, invalid = check_citations(text, len(hits))
         return AskResult(
             question=question,
             answer=text,

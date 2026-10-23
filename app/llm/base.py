@@ -26,5 +26,6 @@ class LLMProvider(ABC):
     model: str
 
     @abstractmethod
-    async def generate(self, messages: list[Message], temperature: float = 0.2, max_tokens: int = 1024) -> LLMResponse:
-        """Send a chat conversation to the model and return its reply."""
+    async def generate(self, messages: list[Message], temperature: float = 0.2, max_tokens: int = 1024,
+                       model: str | None = None) -> LLMResponse:
+        """Send a chat conversation to the model and return its reply. `model` overrides the default model."""

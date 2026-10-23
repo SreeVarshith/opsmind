@@ -14,9 +14,11 @@ class OllamaProvider(LLMProvider):
         self.model = model
         self._transport = transport  # lets tests inject a fake server
 
-    async def generate(self, messages: list[Message], temperature: float = 0.2, max_tokens: int = 1024) -> LLMResponse:
+    async def generate(self, messages: list[Message], temperature: float = 0.2, max_tokens: int = 1024,
+                       model: str | None = None) -> LLMResponse:
+        model = model or self.model
         payload = {
-            "model": self.model,
+            "model": model,
             "messages": [m.model_dump() for m in messages],
             "stream": False,
             "options": {"temperature": temperature, "num_predict": max_tokens},
@@ -32,5 +34,5 @@ class OllamaProvider(LLMProvider):
             raise LLMError(f"Ollama error {e.response.status_code}: {e.response.text}") from e
 
         text = r.json()["message"]["content"]
-        return LLMResponse(text=text, provider=self.name, model=self.model,
+        return LLMResponse(text=text, provider=self.name, model=model,
                            latency_ms=int((time.perf_counter() - start) * 1000))

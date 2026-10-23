@@ -77,6 +77,40 @@ Early observations (9 Groq answers, 3 questions): no invalid citations, but mean
 is only 57% (range 15-100%), so roughly 4 in 10 sentences are not traceable to a source. gpt-oss
 also often cites in its native `【1†L1-L4】` style, which is normalized to `[1]`.
 
+## Incident agent (`POST /agent/ask`)
+
+A LangGraph workflow that answers carefully instead of in one shot:
+
+```
+analyze -> retrieve -> generate -> verify --(>= 70% of claims supported?)--> finalize
+                         ^                  |
+                         +---- revise <-----+   (at most once)
+```
+
+| Step | What it does | Model (Groq) |
+|---|---|---|
+| analyze | Classifies the incident and writes a runbook-style search query | gpt-oss-20b |
+| retrieve | Balanced sources for question + search query | - |
+| generate / revise | Cited answer; on revision, gets the list of unsupported claims | gpt-oss-120b |
+| verify | Labels every claim supported / partial / unsupported against the sources | gpt-oss-20b |
+| finalize | Confidence (high / medium / low), flags unsupported statements | - |
+
+Using two models doubles the free Groq budget (each model has its own 8,000 tokens/minute).
+
+First comparison on 3 questions (Groq):
+
+| Question | /ask coverage | /agent coverage | Agent support | Revisions | Agent time |
+|---|---|---|---|---|---|
+| Pods OOMKilled | 40% | 100% | 88% (draft: 62%) | 1 | 7.8 s |
+| etcd no leader | 53% | 69% | 100% | 0 | 5.4 s |
+| Prometheus not sending alerts | 73% | 27% | 91% | 0 | 4.7 s |
+
+- The triage query found the exact runbook `PrometheusErrorSendingAlertsToAnyAlertmanager` for question 3.
+- The revision loop lifted support from 62% to 88% on question 1.
+- The verifier is imperfect: it marked "`kubectl describe pod` to confirm OOMKilled" as unsupported
+  although a retrieved runbook says it (the writer had cited the wrong source). Verifier accuracy
+  against human labels is measured in Step 9.
+
 ## Project layout
 
 ```
@@ -102,7 +136,7 @@ tests/          pytest tests
 - [x] Step 4: Embeddings and Qdrant vector store
 - [x] Step 5: Hybrid retrieval and reranking
 - [x] Step 6: `/ask` endpoint with citations
-- [ ] Step 7: LangGraph agent with a verification step
+- [x] Step 7: LangGraph agent with a verification step
 - [ ] Step 8: UI, auth, observability
 - [ ] Step 9: Evaluation (RAGAS) and ablation studies
 - [ ] Step 10: Docker, CI, deployment

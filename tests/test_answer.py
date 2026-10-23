@@ -27,7 +27,7 @@ class FakeLLM(LLMProvider):
         self.reply = reply
         self.last_messages = None
 
-    async def generate(self, messages, temperature=0.2, max_tokens=1024):
+    async def generate(self, messages, temperature=0.2, max_tokens=1024, model=None):
         self.last_messages = messages
         return LLMResponse(text=self.reply, provider=self.name, model=self.model, latency_ms=5)
 

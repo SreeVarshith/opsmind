@@ -29,6 +29,12 @@ class Settings(BaseSettings):
     answer_top_k: int = 6              # used instead of quotas when source types are given
     answer_max_tokens: int = 1200
 
+    # Agent (Step 7). The quick steps (analyze, verify) use a smaller model on the API provider;
+    # on Groq each model has its own free tokens-per-minute budget, so this doubles the budget.
+    agent_fast_model: str = "openai/gpt-oss-20b"
+    agent_revise_below: float = 0.7    # rewrite the answer if fewer claims than this are supported
+    agent_max_revisions: int = 1
+
     # Retrieval
     embedding_model: str = "BAAI/bge-small-en-v1.5"
     sparse_model: str = "Qdrant/bm25"

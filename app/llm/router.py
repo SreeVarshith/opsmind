@@ -37,7 +37,9 @@ class LLMRouter:
         return [first] + [p for p in self.providers if p != first]
 
     async def generate(self, messages: list[Message], provider: str | None = None, fallback: bool = True,
-                       **kwargs) -> LLMResponse:
+                       models: dict[str, str] | None = None, **kwargs) -> LLMResponse:
+        """`models` picks a non-default model per provider, e.g. {"openai_compat": "openai/gpt-oss-20b"}.
+        It is per provider so a fallback to another provider still uses a model that provider has."""
         order = self._order(provider)
         if not fallback:
             order = order[:1]
@@ -45,7 +47,7 @@ class LLMRouter:
         errors = []
         for name in order:
             try:
-                return await self.providers[name].generate(messages, **kwargs)
+                return await self.providers[name].generate(messages, model=(models or {}).get(name), **kwargs)
             except LLMError as e:
                 logger.warning("LLM provider %s failed: %s", name, e)
                 errors.append(f"{name}: {e}")

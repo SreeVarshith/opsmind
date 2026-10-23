@@ -17,12 +17,14 @@ class OpenAICompatProvider(LLMProvider):
         self._transport = transport
         self.extra_params = extra_params or {}  # provider-specific options, e.g. {"reasoning_effort": "low"}
 
-    async def generate(self, messages: list[Message], temperature: float = 0.2, max_tokens: int = 1024) -> LLMResponse:
+    async def generate(self, messages: list[Message], temperature: float = 0.2, max_tokens: int = 1024,
+                       model: str | None = None) -> LLMResponse:
+        model = model or self.model
         if not self.api_key:
             raise LLMError("API_KEY is empty. Add your Groq key to the .env file.")
 
         payload = {
-            "model": self.model,
+            "model": model,
             "messages": [m.model_dump() for m in messages],
             "temperature": temperature,
             "max_tokens": max_tokens,
@@ -42,5 +44,5 @@ class OpenAICompatProvider(LLMProvider):
             raise LLMError(f"API error {code} {hint}: {e.response.text[:200]}") from e
 
         text = r.json()["choices"][0]["message"]["content"]
-        return LLMResponse(text=text, provider=self.name, model=self.model,
+        return LLMResponse(text=text, provider=self.name, model=model,
                            latency_ms=int((time.perf_counter() - start) * 1000))
