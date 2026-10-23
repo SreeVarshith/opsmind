@@ -58,6 +58,25 @@ Findings:
    off by default (`RERANK=false`).
 3. The remaining errors are mostly sibling alerts (e.g. `etcdInsufficientMembers` vs `etcdNoLeader`).
 
+## Asking questions
+
+```bash
+uvicorn app.main:app --reload
+python scripts/ask.py "etcd cluster reports no leader and kubectl commands time out"
+python scripts/ask.py "Pods keep restarting with OOMKilled" --provider ollama
+```
+
+`POST /ask` retrieves a balanced set of sources (3 runbooks, 2 tickets, 1 postmortem), numbers
+them [1]..[6], asks the LLM to answer only from them with inline citations, and checks the result:
+
+- `invalid_citations`: numbers cited that were never provided (hallucinated sources)
+- `grounded`: at least one real citation and no invalid ones
+- `citation_coverage`: share of answer sentences that carry a citation
+
+Early observations (9 Groq answers, 3 questions): no invalid citations, but mean citation coverage
+is only 57% (range 15-100%), so roughly 4 in 10 sentences are not traceable to a source. gpt-oss
+also often cites in its native `【1†L1-L4】` style, which is normalized to `[1]`.
+
 ## Project layout
 
 ```
@@ -82,7 +101,7 @@ tests/          pytest tests
 - [x] Step 3: Data collection and ingestion
 - [x] Step 4: Embeddings and Qdrant vector store
 - [x] Step 5: Hybrid retrieval and reranking
-- [ ] Step 6: `/ask` endpoint with citations
+- [x] Step 6: `/ask` endpoint with citations
 - [ ] Step 7: LangGraph agent with a verification step
 - [ ] Step 8: UI, auth, observability
 - [ ] Step 9: Evaluation (RAGAS) and ablation studies

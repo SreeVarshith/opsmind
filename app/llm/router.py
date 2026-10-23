@@ -18,7 +18,10 @@ logger = logging.getLogger(__name__)
 def build_providers(settings: Settings) -> dict[str, LLMProvider]:
     return {
         "ollama": OllamaProvider(settings.ollama_base_url, settings.ollama_model),
-        "openai_compat": OpenAICompatProvider(settings.api_base_url, settings.api_key, settings.api_model),
+        "openai_compat": OpenAICompatProvider(
+            settings.api_base_url, settings.api_key, settings.api_model,
+            extra_params={"reasoning_effort": settings.api_reasoning_effort} if settings.api_reasoning_effort else None,
+        ),
     }
 
 

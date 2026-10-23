@@ -20,6 +20,14 @@ class Settings(BaseSettings):
     api_base_url: str = "https://api.groq.com/openai/v1"
     api_key: str = ""
     api_model: str = "openai/gpt-oss-120b"
+    # For reasoning models (gpt-oss on Groq): low/medium/high. Leave empty for models without it.
+    api_reasoning_effort: str = "low"
+
+    # Answering. Sources per type, so one type (e.g. tickets that mention the service name)
+    # cannot crowd out the others. Used when the request does not filter by source type.
+    answer_quotas: dict[str, int] = {"runbook": 3, "ticket": 2, "postmortem": 1}
+    answer_top_k: int = 6              # used instead of quotas when source types are given
+    answer_max_tokens: int = 1200
 
     # Retrieval
     embedding_model: str = "BAAI/bge-small-en-v1.5"
