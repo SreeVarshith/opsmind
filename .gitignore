@@ -13,3 +13,8 @@ data/raw/tickets/*
 !data/raw/tickets/tickets.jsonl
 qdrant_storage/
 .cache/
+
+# Users, demo passwords and query log stay local
+config/users.json
+config/*.local.txt
+data/opsmind.db

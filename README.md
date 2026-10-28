@@ -111,6 +111,27 @@ First comparison on 3 questions (Groq):
   although a retrieved runbook says it (the writer had cited the wrong source). Verifier accuracy
   against human labels is measured in Step 9.
 
+## Web UI, login and monitoring
+
+```bash
+python -m scripts.create_user --demo        # demo users; passwords go to config/DEMO_CREDENTIALS.local.txt
+uvicorn app.main:app                        # API on :8000
+streamlit run ui/streamlit_app.py           # UI on http://localhost:8501
+```
+
+- **Login:** `POST /auth/login` returns a signed JWT (8-hour shift). Passwords are stored only as salted
+  PBKDF2-SHA256 hashes in a git-ignored `config/users.json`.
+- **Roles and document access:** every chunk is labelled `public` or `restricted` (etcd and control-plane
+  runbooks, 69 chunks). Search filters on that label inside Qdrant, so restricted runbooks never reach
+  the LLM for a `developer`. `admin` and `sre` see everything and can open monitoring.
+- **Query log:** every `/ask` and `/agent/ask` call is stored in SQLite (user, model, confidence,
+  support rate, latency, errors); `GET /metrics/summary` and the Monitoring page summarize it.
+
+| Role | Restricted runbooks | Monitoring | Raw documents |
+|---|---|---|---|
+| admin, sre | yes | yes | yes |
+| developer | no | no | no |
+
 ## Project layout
 
 ```
@@ -126,6 +147,8 @@ scripts/        data download, ticket generation, LLM comparison
 eval/           evaluation sets and benchmark scripts
 infra/          docker-compose and monitoring config
 tests/          pytest tests
+ui/             Streamlit web UI
+config/         local users and demo credentials (git-ignored)
 ```
 
 ## Roadmap
@@ -137,6 +160,6 @@ tests/          pytest tests
 - [x] Step 5: Hybrid retrieval and reranking
 - [x] Step 6: `/ask` endpoint with citations
 - [x] Step 7: LangGraph agent with a verification step
-- [ ] Step 8: UI, auth, observability
+- [x] Step 8: UI, auth, observability
 - [ ] Step 9: Evaluation (RAGAS) and ablation studies
 - [ ] Step 10: Docker, CI, deployment

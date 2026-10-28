@@ -35,6 +35,15 @@ class Settings(BaseSettings):
     agent_revise_below: float = 0.7    # rewrite the answer if fewer claims than this are supported
     agent_max_revisions: int = 1
 
+    # Auth (Step 8). Users are created with scripts/create_user.py.
+    auth_enabled: bool = True
+    jwt_secret: str = ""               # long random string; scripts/create_user.py sets one if empty
+    token_ttl_minutes: int = 480       # one working shift
+    users_file: str = "config/users.json"
+
+    # Query log for monitoring
+    query_log_db: str = "data/opsmind.db"
+
     # Retrieval
     embedding_model: str = "BAAI/bge-small-en-v1.5"
     sparse_model: str = "Qdrant/bm25"

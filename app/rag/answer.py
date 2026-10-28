@@ -166,20 +166,21 @@ class Answerer:
         self.quotas = quotas or {}
 
     def gather_sources(self, question: str, top_k: int | None, source_types: list[str] | None,
-                       service: str | None) -> list[SearchHit]:
+                       service: str | None, access: list[str] | None = None) -> list[SearchHit]:
         """Explicit filter or top_k -> plain search. Otherwise a balanced mix using the quotas,
         in quota order (runbooks first: they are the authoritative fix)."""
         if source_types or top_k or not self.quotas:
-            return self.retriever.retrieve(question, top_k or self.top_k, source_types, service)
+            return self.retriever.retrieve(question, top_k or self.top_k, source_types, service, access=access)
         hits: list[SearchHit] = []
         for source_type, n in self.quotas.items():
-            hits += self.retriever.retrieve(question, n, [source_type], service)
+            hits += self.retriever.retrieve(question, n, [source_type], service, access=access)
         return hits
 
     async def ask(self, question: str, top_k: int | None = None, source_types: list[str] | None = None,
-                  service: str | None = None, provider: str | None = None) -> AskResult:
+                  service: str | None = None, provider: str | None = None,
+                  access: list[str] | None = None) -> AskResult:
         start = time.perf_counter()
-        hits = self.gather_sources(question, top_k, source_types, service)
+        hits = self.gather_sources(question, top_k, source_types, service, access)
         retrieval_ms = int((time.perf_counter() - start) * 1000)
         sources = [to_citation(i, h) for i, h in enumerate(hits, 1)]
 

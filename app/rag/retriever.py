@@ -21,13 +21,13 @@ class Retriever:
 
     def retrieve(self, query: str, top_k: int = 5, source_types: list[str] | None = None,
                  service: str | None = None, mode: SearchMode | None = None,
-                 rerank: bool | None = None) -> list[SearchHit]:
+                 rerank: bool | None = None, access: list[str] | None = None) -> list[SearchHit]:
         query = normalize_text(query)
         mode = mode or self.mode
         use_rerank = (self.rerank if rerank is None else rerank) and self.reranker is not None
 
         fetch = max(top_k, self.rerank_candidates) if use_rerank else top_k
-        hits = self.store.search(query, fetch, source_types, service, mode=mode)
+        hits = self.store.search(query, fetch, source_types, service, mode=mode, access=access)
         return self.reranker.rerank(query, hits, top_k) if use_rerank else hits
 
 

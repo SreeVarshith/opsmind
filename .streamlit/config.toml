@@ -1,0 +1,12 @@
+[server]
+# Only reachable from this computer. Change to "0.0.0.0" only behind a proper reverse proxy with TLS.
+address = "localhost"
+port = 8501
+headless = true
+runOnSave = true   # development convenience: reload the UI when the file changes
+
+[browser]
+gatherUsageStats = false
+
+[theme]
+base = "dark"

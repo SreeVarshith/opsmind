@@ -7,12 +7,13 @@ from pydantic import BaseModel
 from qdrant_client import QdrantClient, models
 
 from app.core.config import get_settings
+from app.rag.access import access_level
 from app.rag.chunking import Chunk
 from app.rag.embeddings import Embedder, SparseEmbedder
 
 DENSE = "dense"
 SPARSE = "bm25"
-FILTERABLE_FIELDS = ["source_type", "doc_id", "metadata.service", "metadata.component", "metadata.system"]
+FILTERABLE_FIELDS = ["source_type", "access", "doc_id", "metadata.service", "metadata.component", "metadata.system"]
 
 SearchMode = Literal["dense", "sparse", "hybrid"]
 
@@ -73,13 +74,17 @@ class VectorStore:
                 points.append(models.PointStruct(
                     id=str(uuid.uuid5(uuid.NAMESPACE_URL, c.chunk_id)),  # Qdrant ids must be UUIDs or ints
                     vector=vector,
-                    payload=c.model_dump(),
+                    payload={**c.model_dump(), "access": access_level(c)},
                 ))
             self.client.upsert(self.collection, points=points)
 
     def search(self, query: str, top_k: int = 5, source_types: list[str] | None = None,
-               service: str | None = None, mode: SearchMode = "dense") -> list[SearchHit]:
+               service: str | None = None, mode: SearchMode = "dense",
+               access: list[str] | None = None) -> list[SearchHit]:
+        """`access`: access levels the user may see (None = no restriction, e.g. internal jobs)."""
         conditions = []
+        if access is not None:
+            conditions.append(models.FieldCondition(key="access", match=models.MatchAny(any=access)))
         if source_types:
             conditions.append(models.FieldCondition(key="source_type", match=models.MatchAny(any=source_types)))
         if service:

@@ -3,6 +3,7 @@ from typing import Literal
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
 
+from app.core.security import User, get_current_user
 from app.rag.retriever import Retriever, get_retriever
 from app.rag.vector_store import SearchHit
 
@@ -28,8 +29,10 @@ class SearchResponse(BaseModel):
 
 
 @router.post("/search", response_model=SearchResponse)
-def search(req: SearchRequest, retriever: Retriever = Depends(get_retriever)) -> SearchResponse:
+def search(req: SearchRequest, user: User = Depends(get_current_user),
+           retriever: Retriever = Depends(get_retriever)) -> SearchResponse:
     mode = req.mode or retriever.mode
     rerank = (retriever.rerank if req.rerank is None else req.rerank) and retriever.reranker is not None
-    hits = retriever.retrieve(req.query, req.top_k, req.source_types, req.service, mode=mode, rerank=rerank)
+    hits = retriever.retrieve(req.query, req.top_k, req.source_types, req.service, mode=mode, rerank=rerank,
+                              access=user.access)
     return SearchResponse(query=req.query, mode=mode, reranked=rerank, hits=hits)

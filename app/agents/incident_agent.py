@@ -75,6 +75,7 @@ class AgentState(TypedDict, total=False):
     question: str
     service: str | None
     provider: str | None
+    access: list[str] | None
     analysis: dict[str, Any]
     search_query: str
     hits: list[SearchHit]
@@ -142,7 +143,7 @@ class IncidentAgent:
         start = time.perf_counter()
         # Keep the original wording (exact error strings help BM25) and add the triage query.
         query = state["question"] + ("\n" + state["search_query"] if state.get("search_query") else "")
-        hits = self.answerer.gather_sources(query, None, None, state.get("service"))
+        hits = self.answerer.gather_sources(query, None, None, state.get("service"), state.get("access"))
         titles = ", ".join(h.metadata.get("alert") or h.title[:30] for h in hits[:3])
         return {"hits": hits, "trace": [Step(step="retrieve", ms=_ms(start), detail=f"{len(hits)} sources: {titles}...")]}
 
@@ -236,9 +237,11 @@ class IncidentAgent:
         return g.compile()
 
     # ---------- entry point ----------
-    async def run(self, question: str, service: str | None = None, provider: str | None = None) -> AgentResult:
+    async def run(self, question: str, service: str | None = None, provider: str | None = None,
+                  access: list[str] | None = None) -> AgentResult:
         start = time.perf_counter()
         s = await self.graph.ainvoke({"question": question, "service": service, "provider": provider,
+                                      "access": access,
                                       "revisions": 0, "trace": [], "models_used": []})
         hits = s.get("hits", [])
         sources = [to_citation(i, h) for i, h in enumerate(hits, 1)]
