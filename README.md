@@ -111,6 +111,49 @@ First comparison on 3 questions (Groq):
   although a retrieved runbook says it (the writer had cited the wrong source). Verifier accuracy
   against human labels is measured in Step 9.
 
+## Answer evaluation (Step 9)
+
+```bash
+python -m eval.answer_eval --config all --n 40     # resumable; free-tier paced
+python -m eval.answer_report                       # tables -> eval/results/answer_eval_report.md
+streamlit run eval/progress_app.py                 # live progress while it runs
+```
+
+40 synthetic tickets per configuration (seed 42). The ticket being asked about is hidden from search
+(otherwise the answer leaks). Judge: `qwen3.8-27b` (different family from the gpt-oss writers), reasoning
+off, score 4-5 = correct. Ranges are 95% bootstrap confidence intervals.
+
+| Configuration | Correct | Mean score | Runbook found | Runbook cited | Cited sentences | Median time |
+|---|---|---|---|---|---|---|
+| Fast · gpt-oss-120b (Groq) | 40% (25-55%) | 3.30 | 75% | 70% | 47% | 2.1 s |
+| Agent · gpt-oss-120b + 20b checks | 42% (28-57%) | 3.20 | 78% | 62% | 66% | 8.6 s |
+| Fast · Llama 3.2 3B (local, 4 GB GPU) | 18% (8-30%) | 2.35 | 75% | 28% | 32% | 37.0 s |
+
+Findings:
+1. **Model size dominates.** Retrieval is identical (75% runbook found), yet 120B beats 3B on 27 of 40
+   questions (1 loss). The 3B model gave 9 wrong answers (score 1); 120B gave none.
+2. **The agent improves traceability, not correctness.** Cited sentences rise from 47% to 66%, but
+   accuracy is unchanged (42% vs 40%, overlapping intervals) at 4x the latency. Paired: 5 better, 26 same,
+   9 worse. The loss comes from the revision step: on the 26 revised answers the mean score drops
+   3.38 -> 3.19, on unrevised ones it is flat (3.14 -> 3.21); 8 of the 9 losses were revised. Rewriting to
+   satisfy the fact-checker removes correct operational advice that the sources do not state verbatim.
+3. **The bottleneck is diagnosis, not retrieval.** The right runbook is retrieved 75% of the time but
+   only ~40% of answers name the specific root cause. Runbooks list several possible causes; the judge
+   comments show answers often pick a plausible but wrong one.
+4. **Zero hallucinated citation numbers** in all 120 answers.
+
+Limitations: 40 questions per configuration; tickets are synthetic and written by gpt-oss-20b (same
+family as the writers); the LLM judge is not yet validated against human labels; single run per
+configuration. The local model ran on a 4 GB laptop GPU that intermittently dropped to a low-power
+clock, so its latency is pessimistic.
+
+Fact-checker audit (in progress): 50 claims (25 flagged) sampled for blind human labelling.
+
+```bash
+streamlit run eval/label_app.py        # label claims; the verifier's verdict is hidden
+python -m eval.verifier_audit score    # agreement, confusion matrix, Cohen's kappa
+```
+
 ## Web UI, login and monitoring
 
 ```bash
