@@ -108,8 +108,8 @@ First comparison on 3 questions (Groq):
 - The triage query found the exact runbook `PrometheusErrorSendingAlertsToAnyAlertmanager` for question 3.
 - The revision loop lifted support from 62% to 88% on question 1.
 - The verifier is imperfect: it marked "`kubectl describe pod` to confirm OOMKilled" as unsupported
-  although a retrieved runbook says it (the writer had cited the wrong source). Verifier accuracy
-  against human labels is measured in Step 9.
+  although a retrieved runbook says it (the writer had cited the wrong source). Step 9 audits the
+  verifier against a second model (kappa 0.48); human validation is future work.
 
 ## Answer evaluation (Step 9)
 
