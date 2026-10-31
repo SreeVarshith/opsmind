@@ -147,7 +147,12 @@ family as the writers); the LLM judge is not yet validated against human labels;
 configuration. The local model ran on a 4 GB laptop GPU that intermittently dropped to a low-power
 clock, so its latency is pessimistic.
 
-Fact-checker audit (in progress): 50 claims (25 flagged) sampled for blind human labelling.
+Fact-checker audit: 50 claims (25 flagged) were labelled independently by a second model (Qwen).
+Agreement with the verifier: 74% on supported-vs-flagged (Cohen's kappa 0.48, moderate) and 54% on
+three classes (kappa 0.28); the two models never agreed on a "partial" claim. This is model-vs-model
+agreement, not human validation; the human labelling tool below is ready for that.
+
+Full write-up: [docs/REPORT.md](docs/REPORT.md).
 
 ```bash
 streamlit run eval/label_app.py        # label claims; the verifier's verdict is hidden
@@ -204,5 +209,5 @@ config/         local users and demo credentials (git-ignored)
 - [x] Step 6: `/ask` endpoint with citations
 - [x] Step 7: LangGraph agent with a verification step
 - [x] Step 8: UI, auth, observability
-- [ ] Step 9: Evaluation (RAGAS) and ablation studies
+- [x] Step 9: Evaluation, ablation studies and report ([docs/REPORT.md](docs/REPORT.md))
 - [ ] Step 10: Docker, CI, deployment

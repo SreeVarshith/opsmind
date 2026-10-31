@@ -22,6 +22,14 @@
                       "--server.address", "localhost", "--server.headless", "true",
                       "--browser.gatherUsageStats", "false"],
       "port": 8502
+    },
+    {
+      "name": "opsmind-labeling",
+      "runtimeExecutable": ".venv/Scripts/python.exe",
+      "runtimeArgs": ["-m", "streamlit", "run", "eval/label_app.py", "--server.port", "8503",
+                      "--server.address", "localhost", "--server.headless", "true",
+                      "--browser.gatherUsageStats", "false"],
+      "port": 8503
     }
   ]
 }

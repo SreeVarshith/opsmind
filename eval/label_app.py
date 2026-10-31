@@ -57,7 +57,27 @@ for col, (value, label) in zip(cols, CHOICES.items()):
         st.rerun()
 
 st.markdown("---")
+st.markdown("### 📚 Sources the assistant had")
+st.caption("Type a key word or number from the statement (e.g. `500m`, `memory`, `restart`) to highlight it "
+           "in every source below.")
+term = st.text_input("🔍 Find a word in the sources", key=f"find-{i}", placeholder="e.g. 500m").strip()
+
+
+def highlight(text: str, word: str) -> tuple[str, int]:
+    """Escape the text for display and mark every case-insensitive match of `word`."""
+    import html
+    import re
+
+    safe = html.escape(text)
+    if not word:
+        return safe, 0
+    pattern = re.compile(re.escape(html.escape(word)), re.IGNORECASE)
+    return pattern.subn(lambda m: f"<mark style='background:#ffd54f;color:#000'>{m.group(0)}</mark>", safe)
+
+
 for s in row["sources"]:
     section = f" - {s['section']}" if s["section"] else ""
-    with st.expander(f"[{s['number']}] {s['title']}{section}", expanded=False):
-        st.text(s["text"])
+    shown, hits = highlight(s["text"], term)
+    found = f"  ·  **{hits} match{'es' if hits != 1 else ''}**" if term else ""
+    with st.expander(f"[{s['number']}] {s['title']}{section}{found}", expanded=True):
+        st.markdown(f"<div style='white-space:pre-wrap;font-size:0.9rem'>{shown}</div>", unsafe_allow_html=True)

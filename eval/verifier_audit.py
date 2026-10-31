@@ -3,11 +3,14 @@
     python -m eval.verifier_audit sample            # 1. pick claims to label -> eval/labels/verifier_sample.jsonl
     streamlit run eval/label_app.py                 # 2. label them in the browser (verifier verdict hidden)
     python -m eval.verifier_audit score             # 3. agreement, confusion matrix, Cohen's kappa
+    python -m eval.verifier_audit crosscheck        # optional: a second AI (Qwen) labels the same claims
+    python -m eval.verifier_audit score crosscheck  # verifier vs that second AI (weaker than a human!)
 
 The sample over-represents claims the verifier flagged, because those are rare but are exactly the
 decisions that change what the user sees. Labelling is blind: the verifier's verdict is stored but not
 shown, so it cannot bias the human.
 """
+import asyncio
 import json
 import random
 import sys
@@ -16,7 +19,10 @@ from pathlib import Path
 
 from app.ingestion.pipeline import read_jsonl
 from app.rag.chunking import chunk_documents
-from eval.answer_eval import OUT_DIR
+from app.agents.incident_agent import VERIFY_PROMPT
+from app.llm.base import LLMError, Message
+from app.llm.json_utils import parse_json_object
+from eval.answer_eval import OUT_DIR, make_judge
 
 SAMPLE = Path("eval/labels/verifier_sample.jsonl")
 VERDICTS = ["supported", "partial", "unsupported"]
@@ -62,16 +68,45 @@ def cohen_kappa(pairs: list[tuple[str, str]]) -> float:
     return (observed - expected) / (1 - expected) if expected < 1 else 1.0
 
 
-def score() -> None:
+async def crosscheck() -> None:
+    """A second, independent AI (Qwen, another model family) labels each sampled claim on its own.
+    This measures consistency between two AIs. It is NOT a substitute for human validation."""
     rows = [json.loads(line) for line in SAMPLE.open(encoding="utf-8")]
-    done = [r for r in rows if r["human_label"] in VERDICTS]
+    llm = make_judge()
+    for n, r in enumerate(rows, 1):
+        if r.get("crosscheck_label") in VERDICTS:
+            continue
+        sources = "\n\n".join(f"[{s['number']}] {s['title']}\n{s['text']}" for s in r["sources"])
+        messages = [Message(role="system", content=VERIFY_PROMPT),
+                    Message(role="user", content=f"Sources:\n\n{sources}\n\n---\nClaims:\n1. {r['claim']}")]
+        for _ in range(6):
+            try:
+                res = await llm.generate(messages, temperature=0.0, max_tokens=300)
+                verdict = parse_json_object(res.text)["results"][0]["verdict"]
+                if verdict in VERDICTS:
+                    r["crosscheck_label"] = verdict
+                    break
+            except LLMError as e:
+                await asyncio.sleep(30 if "429" in str(e) else 5)
+            except (ValueError, KeyError, IndexError, TypeError):
+                await asyncio.sleep(2)
+        SAMPLE.write_text("".join(json.dumps(x, ensure_ascii=False) + "\n" for x in rows), encoding="utf-8")
+        print(f"  {n}/{len(rows)} {r.get('crosscheck_label')}", flush=True)
+        await asyncio.sleep(2)
+
+
+def score(reference: str = "human_label") -> None:
+    rows = [json.loads(line) for line in SAMPLE.open(encoding="utf-8")]
+    done = [r for r in rows if r.get(reference) in VERDICTS]
     if not done:
-        sys.exit("No human labels yet. Run: streamlit run eval/label_app.py")
-    pairs = [(r["human_label"], r["verifier_verdict"]) for r in done]
-    print(f"Labelled: {len(done)} of {len(rows)} claims\n")
+        sys.exit("No human labels yet. Run: streamlit run eval/label_app.py" if reference == "human_label"
+                 else "No cross-check labels yet. Run: python -m eval.verifier_audit crosscheck")
+    who = "human" if reference == "human_label" else "second AI (Qwen)"
+    pairs = [(r[reference], r["verifier_verdict"]) for r in done]
+    print(f"Reference: {who}. Labelled: {len(done)} of {len(rows)} claims\n")
     print(f"Exact agreement: {sum(h == v for h, v in pairs) / len(pairs):.0%}")
     print(f"Cohen's kappa:   {cohen_kappa(pairs):.2f}  (0 = chance, 0.4-0.6 moderate, >0.6 substantial)\n")
-    print("Confusion matrix (rows = human, columns = verifier):")
+    print(f"Confusion matrix (rows = {who}, columns = verifier):")
     print(f"{'':>13}" + "".join(f"{v:>13}" for v in VERDICTS))
     for h in VERDICTS:
         print(f"{h:>13}" + "".join(f"{sum(1 for a, b in pairs if a == h and b == v):>13}" for v in VERDICTS))
@@ -85,4 +120,10 @@ def score() -> None:
 
 
 if __name__ == "__main__":
-    {"sample": sample, "score": score}[sys.argv[1] if len(sys.argv) > 1 else "score"]()
+    command = sys.argv[1] if len(sys.argv) > 1 else "score"
+    if command == "sample":
+        sample()
+    elif command == "crosscheck":
+        asyncio.run(crosscheck())
+    else:  # "score" (human labels) or "score crosscheck" (second AI)
+        score("crosscheck_label" if "crosscheck" in sys.argv[2:] else "human_label")
