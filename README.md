@@ -1,4 +1,6 @@
-﻿# OpsMind
+# OpsMind
+
+[![CI](https://github.com/SreeVarshith/opsmind/actions/workflows/ci.yml/badge.svg)](https://github.com/SreeVarshith/opsmind/actions/workflows/ci.yml)
 
 An agentic RAG copilot for IT incident resolution. Paste an alert or an error log, and OpsMind returns the likely root cause, similar past incidents and fix steps, with a citation for every claim.
 
@@ -229,3 +231,8 @@ config/         local users and demo credentials (git-ignored)
 - [x] Step 8: UI, auth, observability
 - [x] Step 9: Evaluation, ablation studies and report ([docs/REPORT.md](docs/REPORT.md))
 - [ ] Step 10: Docker and CI done; GitHub publication and deployment pending
+
+## License
+
+Code: [MIT](LICENSE). The downloaded runbooks, postmortems and logs belong to their original projects
+(linked under Data), and excerpts of them appear in `eval/results/` and `eval/labels/`.
