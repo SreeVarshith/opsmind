@@ -42,6 +42,7 @@ CONFIGS = {  # name: (mode, provider)
     "fast_groq": ("fast", "openai_compat"),
     "agent_groq": ("agent", "openai_compat"),
     "fast_local": ("fast", "ollama"),
+    "fast_groq_ranked": ("fast", "openai_compat"),   # same setup, after the prompt moved to ranked causes
 }
 
 JUDGE_PROMPT = """You grade answers from an IT incident-response assistant.

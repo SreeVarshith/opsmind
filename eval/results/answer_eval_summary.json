@@ -71,6 +71,30 @@
     "runbook_retrieved_rate": 0.75,
     "runbook_cited_rate": 0.275
   },
+  "fast_groq_ranked": {
+    "n": 40,
+    "mean_score": 3.2,
+    "citation_coverage": 0.608,
+    "invalid_citations": 0,
+    "support_rate": null,
+    "revised": 0,
+    "p50_s": 2.556,
+    "p95_s": 10.649,
+    "score_dist": {
+      "1": 2,
+      "2": 9,
+      "3": 10,
+      "4": 17,
+      "5": 2
+    },
+    "correct_rate": 0.475,
+    "correct_ci95": [
+      0.325,
+      0.625
+    ],
+    "runbook_retrieved_rate": 0.75,
+    "runbook_cited_rate": 0.675
+  },
   "paired": {
     "fast_groq_vs_agent_groq": {
       "n": 40,
@@ -83,6 +107,12 @@
       "b_better": 27,
       "same": 12,
       "a_better": 1
+    },
+    "fast_groq_vs_fast_groq_ranked": {
+      "n": 40,
+      "b_better": 6,
+      "same": 23,
+      "a_better": 11
     }
   }
 }

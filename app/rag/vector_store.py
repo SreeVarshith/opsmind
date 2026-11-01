@@ -123,6 +123,10 @@ class VectorStore:
         indices, values = self.sparse_embedder.embed_query(query)
         return models.SparseVector(indices=indices, values=values)
 
+    def delete_document(self, doc_id: str) -> None:
+        self.client.delete(self.collection, points_selector=models.FilterSelector(filter=models.Filter(
+            must=[models.FieldCondition(key="doc_id", match=models.MatchValue(value=doc_id))])))
+
     def count(self) -> int:
         return self.client.count(self.collection).count if self.client.collection_exists(self.collection) else 0
 

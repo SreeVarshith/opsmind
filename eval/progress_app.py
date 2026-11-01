@@ -11,7 +11,7 @@ import streamlit as st
 OUT_DIR = Path("eval/results/answers")
 TOTAL = 40
 CONFIGS = {"fast_groq": "⚡ Fast · Groq gpt-oss-120b", "agent_groq": "🧠 Agent · Groq (+ fact-check)",
-           "fast_local": "💻 Fast · local Llama 3.2 3B"}
+           "fast_local": "💻 Fast · local Llama 3.2 3B", "fast_groq_ranked": "🥇 Fast · Groq, ranked causes"}
 
 st.set_page_config(page_title="OpsMind eval progress", page_icon="📊", layout="wide")
 st.title("📊 OpsMind answer evaluation, live")

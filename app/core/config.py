@@ -13,7 +13,7 @@ class Settings(BaseSettings):
 
     # LLM provider: "ollama" (local, free) or "openai_compat" (Groq / OpenRouter / Cerebras, free tiers)
     llm_provider: str = "ollama"
-    ollama_base_url: str = "http://localhost:11434"
+    ollama_base_url: str = "http://127.0.0.1:11434"
     ollama_model: str = "llama3.2:3b"
 
     # Any OpenAI-compatible API. Defaults point at Groq.
@@ -25,7 +25,7 @@ class Settings(BaseSettings):
 
     # Answering. Sources per type, so one type (e.g. tickets that mention the service name)
     # cannot crowd out the others. Used when the request does not filter by source type.
-    answer_quotas: dict[str, int] = {"runbook": 3, "ticket": 2, "postmortem": 1}
+    answer_quotas: dict[str, int] = {"uploaded": 2, "runbook": 3, "ticket": 2, "postmortem": 1}
     answer_top_k: int = 6              # used instead of quotas when source types are given
     answer_max_tokens: int = 1200
 
@@ -53,7 +53,8 @@ class Settings(BaseSettings):
     # (web-search model vs. Kubernetes/log text) and adds ~5 s per query on CPU.
     rerank: bool = False
     rerank_candidates: int = 30        # how many hits the reranker re-scores
-    qdrant_url: str = "http://localhost:6333"
+    # 127.0.0.1, not localhost: on Windows localhost tries IPv6 first and adds ~2 s to every connection.
+    qdrant_url: str = "http://127.0.0.1:6333"
     # If set, Qdrant runs inside Python and stores data in this folder (no Docker needed).
     # Only one process can open it at a time: stop the API before re-indexing.
     qdrant_path: str = ""

@@ -11,6 +11,7 @@ from app.ingestion.runbooks import load_runbooks
 from app.ingestion.schema import Document
 from app.ingestion.text import normalize_text
 from app.ingestion.tickets import load_tickets
+from app.ingestion.uploads import load_all as load_uploads
 
 RAW = Path("data/raw")
 OUTPUT = Path("data/processed/documents.jsonl")
@@ -22,6 +23,7 @@ def collect(raw: Path = RAW) -> list[Document]:
         + load_postmortems(raw / "postmortems" / "README.md")
         + load_logs(raw / "logs")
         + load_tickets(raw / "tickets" / "tickets.jsonl")
+        + load_uploads()
     )
     for d in docs:
         d.title, d.text = normalize_text(d.title), normalize_text(d.text)

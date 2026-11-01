@@ -110,6 +110,25 @@ the second model judged them supported. For "unsupported" specifically, the veri
 precision and 71% recall relative to the second model. Because the sample over-represents flagged
 claims, these rates describe this sample, not the full population.
 
+### 4.5 Ranked likely causes (follow-up experiment)
+
+Because diagnosis was the weakest step, the answer format changed from one "likely cause" to up to three ranked
+causes, each with its evidence and how to confirm it. The fast configuration was rerun on the same 40 tickets with
+the same judge.
+
+| Fast, gpt-oss-120b | Correct | Mean score | Score 5 | Score 4 | Score 1-2 | Median time |
+|---|---|---|---|---|---|---|
+| Original prompt | 40% (25-55%) | 3.30 | 7 | 9 | 11 | 2.1 s |
+| Ranked causes | 48% (32-62%) | 3.20 | 2 | 17 | 11 | 2.6 s |
+
+The result is inconclusive. More answers reached the "correct" threshold, but the mean score fell slightly, fully
+correct answers dropped from 7 to 2, and on paired questions the ranked version was better on 6, the same on 23 and
+worse on 11 (two-sided sign test on the 17 differing pairs, p = 0.33). Listing several causes may make answers easier
+to act on while making each less specific, but this sample cannot show that. The feature stays because engineers can
+rule causes out quickly, not because it was shown to raise accuracy. The same prompt update also added rules for
+follow-ups and for ignoring instructions inside documents, and the rerun used an updated citation parser, so its
+cited-sentence share (61%) is not directly comparable with the earlier 47%.
+
 ## 5. Discussion
 
 1. **Fusion beats reranking in a specialised domain.** A cheap hybrid of meaning and keyword search
@@ -135,6 +154,8 @@ claims, these rates describe this sample, not the full population.
 - The answer judge and the verifier audit both use an LLM (Qwen). **No human labels were collected**;
   the audit measures agreement between two models, not correctness of either.
 - One run per configuration; generation is stochastic.
+- Features added after this evaluation (follow-up questions, document upload) were tested for correct behaviour,
+  not for answer quality.
 - The local model ran on a laptop GPU that intermittently dropped to a low-power clock, inflating its latency.
 
 ## 7. Future work

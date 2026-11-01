@@ -14,6 +14,7 @@ from app.rag.answer import (
     format_sources,
     get_answerer,
     normalize_citations,
+    split_claims,
 )
 from app.rag.retriever import Retriever
 from tests.test_rag import RUNBOOK, make_store
@@ -45,6 +46,12 @@ def test_extract_citations_formats():
 def test_other_citation_styles_are_normalized():
     text = "Leader lost【1†L1-L4】【3†L1-L8】. Check disks【2】. See notes[^4]."
     assert normalize_citations(text) == "Leader lost[1][3]. Check disks[2]. See notes[4]."
+    assert normalize_citations("Check it (source 2). Also (Sources 1, 3).") == "Check it [2]. Also [1, 3]."
+
+
+def test_intro_lines_before_code_are_not_claims():
+    answer = "1. Test etcd health from a pod:\n```\netcdctl endpoint health\n```\n2. Restart the failed member now [1]."
+    assert split_claims(answer) == ["Restart the failed member now [1]."]
 
 
 def test_gpt_oss_style_answer_counts_as_grounded():

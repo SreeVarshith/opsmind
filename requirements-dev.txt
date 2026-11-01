@@ -1,0 +1,6 @@
+# Everything needed for tests and the evaluation tools (not installed in the Docker image).
+-r requirements.txt
+
+pytest==8.3.4
+ruff==0.8.6
+streamlit==1.66.1   # eval/progress_app.py and eval/label_app.py

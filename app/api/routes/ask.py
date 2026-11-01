@@ -16,7 +16,7 @@ class AskRequest(BaseModel):
         "Pods in checkout-api keep restarting and kubectl shows OOMKilled. What should I do?"])
     top_k: int | None = Field(None, ge=1, le=12,
                               description="Empty = balanced mix (3 runbooks, 2 tickets, 1 postmortem)")
-    source_types: list[Literal["runbook", "postmortem", "log", "ticket"]] | None = None
+    source_types: list[Literal["runbook", "postmortem", "log", "ticket", "uploaded"]] | None = None
     service: str | None = None
     provider: Literal["ollama", "openai_compat"] | None = Field(None, description="Empty = default LLM")
 

@@ -6,6 +6,8 @@ Strategy:
 So the app keeps working when you are offline OR when the free API is rate limited.
 """
 import logging
+import time
+from collections.abc import AsyncIterator
 
 from app.core.config import Settings, get_settings
 from app.llm.base import LLMError, LLMProvider, LLMResponse, Message
@@ -51,6 +53,34 @@ class LLMRouter:
             except LLMError as e:
                 logger.warning("LLM provider %s failed: %s", name, e)
                 errors.append(f"{name}: {e}")
+        raise LLMError(" | ".join(errors))
+
+    async def stream(self, messages: list[Message], provider: str | None = None, fallback: bool = True,
+                     models: dict[str, str] | None = None, **kwargs) -> AsyncIterator[str | LLMResponse]:
+        """Yield text pieces, then one final LLMResponse. Falls back only before the first piece:
+        once the user has seen text, switching model mid-answer would produce nonsense."""
+        order = self._order(provider)
+        if not fallback:
+            order = order[:1]
+
+        errors = []
+        for name in order:
+            chosen = (models or {}).get(name)
+            pieces: list[str] = []
+            start = time.perf_counter()
+            try:
+                async for piece in self.providers[name].stream(messages, model=chosen, **kwargs):
+                    pieces.append(piece)
+                    yield piece
+            except LLMError as e:
+                if pieces:
+                    raise
+                logger.warning("LLM provider %s failed: %s", name, e)
+                errors.append(f"{name}: {e}")
+                continue
+            yield LLMResponse(text="".join(pieces), provider=self.providers[name].name, model=chosen or self.providers[name].model,
+                              latency_ms=int((time.perf_counter() - start) * 1000))
+            return
         raise LLMError(" | ".join(errors))
 
 

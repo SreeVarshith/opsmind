@@ -21,3 +21,10 @@ data/opsmind.db
 
 # Run logs can contain account details from API error messages
 *.log
+
+# Team uploads stay local
+data/uploads/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/

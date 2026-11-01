@@ -9,7 +9,7 @@ from app.rag.vector_store import SearchHit
 
 router = APIRouter(tags=["search"])
 
-SourceType = Literal["runbook", "postmortem", "log", "ticket"]
+SourceType = Literal["runbook", "postmortem", "log", "ticket", "uploaded"]
 
 
 class SearchRequest(BaseModel):

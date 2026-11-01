@@ -15,7 +15,7 @@ from eval.answer_eval import CONFIGS, OUT_DIR
 REPORT_MD = Path("eval/results/answer_eval_report.md")
 REPORT_JSON = Path("eval/results/answer_eval_summary.json")
 LABELS = {"fast_groq": "Fast · gpt-oss-120b", "agent_groq": "Agent · gpt-oss-120b (+20b checks)",
-          "fast_local": "Fast · Llama 3.2 3B (local)"}
+          "fast_local": "Fast · Llama 3.2 3B (local)", "fast_groq_ranked": "Fast · gpt-oss-120b, ranked causes"}
 
 
 def load(name: str) -> list[dict]:
@@ -91,7 +91,7 @@ def main() -> None:
         lines.append(f"| {LABELS[name]} | " + " | ".join(str(s["score_dist"][k]) for k in range(1, 6)) + " |")
 
     comparisons = []
-    for a, b in (("fast_groq", "agent_groq"), ("fast_local", "fast_groq")):
+    for a, b in (("fast_groq", "agent_groq"), ("fast_local", "fast_groq"), ("fast_groq", "fast_groq_ranked")):
         if data.get(a) and data.get(b):
             p = paired(data[a], data[b])
             comparisons.append((a, b, p))

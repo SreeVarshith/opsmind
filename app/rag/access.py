@@ -26,6 +26,8 @@ ROLE_ACCESS: dict[str, list[str]] = {
 
 
 def access_level(chunk: Chunk) -> str:
+    if chunk.metadata.get("access") in (PUBLIC, RESTRICTED):  # chosen at upload time
+        return chunk.metadata["access"]
     if chunk.source_type == "runbook" and (chunk.metadata.get("component") in RESTRICTED_COMPONENTS
                                            or chunk.metadata.get("alert") in RESTRICTED_ALERTS):
         return RESTRICTED

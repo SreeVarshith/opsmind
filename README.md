@@ -4,17 +4,35 @@
 
 An agentic RAG copilot for IT incident resolution. Paste an alert or an error log, and OpsMind returns the likely root cause, similar past incidents and fix steps, with a citation for every claim.
 
+## Features
+
+- **Cited answers:** paste an error or describe the symptoms; get ranked likely causes and fixes, with clickable
+  sources from runbooks, past tickets, postmortems and your own documents.
+- **Two modes:** Fast writes the answer live; Careful shows each agent step and fact-checks every sentence.
+- **Follow-up questions:** ask "what if that doesn't work?" and it keeps the context.
+- **Document upload:** add PDF, Markdown or text files, searchable right away, with per-document access.
+- **Feedback and monitoring:** helpful ratings and "this fixed it", plus usage, speed and quality charts.
+- **Login and roles:** restricted documents are filtered inside the database, so they never reach the AI
+  for users without access.
+
 ## Quick start (Windows)
 
 ```bash
 python -m venv .venv
 .venv\Scripts\activate
-pip install -r requirements.txt
+pip install -r requirements-dev.txt
 copy .env.example .env
-uvicorn app.main:app --reload
+python -m scripts.create_user --demo
+docker compose -f infra/docker-compose.yml up -d
+python scripts/download_data.py
+python -m app.ingestion.pipeline
+python -m app.rag.index
+cd frontend && npm ci && npm run build && cd ..
+uvicorn app.main:app
 ```
 
-Then open http://localhost:8000/docs.
+Add your free Groq key to `.env` as `API_KEY`, then open http://localhost:8000. Demo logins are in
+`config/DEMO_CREDENTIALS.local.txt`. API docs are at http://localhost:8000/docs.
 
 ## Data
 
@@ -60,24 +78,19 @@ Findings:
    off by default (`RERANK=false`).
 3. The remaining errors are mostly sibling alerts (e.g. `etcdInsufficientMembers` vs `etcdNoLeader`).
 
-## Asking questions
+## How an answer is built
 
-```bash
-uvicorn app.main:app --reload
-python scripts/ask.py "etcd cluster reports no leader and kubectl commands time out"
-python scripts/ask.py "Pods keep restarting with OOMKilled" --provider ollama
-```
-
-`POST /ask` retrieves a balanced set of sources (3 runbooks, 2 tickets, 1 postmortem), numbers
-them [1]..[6], asks the LLM to answer only from them with inline citations, and checks the result:
+Sources come as a balanced set (your documents, 3 runbooks, 2 tickets, 1 postmortem), so one type cannot crowd
+out the others. They are numbered, the LLM must answer only from them with inline citations, and each answer
+is checked:
 
 - `invalid_citations`: numbers cited that were never provided (hallucinated sources)
 - `grounded`: at least one real citation and no invalid ones
 - `citation_coverage`: share of answer sentences that carry a citation
 
-Early observations (9 Groq answers, 3 questions): no invalid citations, but mean citation coverage
-is only 57% (range 15-100%), so roughly 4 in 10 sentences are not traceable to a source. gpt-oss
-also often cites in its native `【1†L1-L4】` style, which is normalized to `[1]`.
+Models cite in several styles (`【1†L1-L4】`, `(source 2)`), all normalized to `[n]`. Follow-up questions are first
+rewritten into a standalone search question using the conversation. Instructions inside documents are treated as
+data: the prompt tells the model not to obey them.
 
 ## Incident agent (`POST /agent/ask`)
 
@@ -154,6 +167,10 @@ Agreement with the verifier: 74% on supported-vs-flagged (Cohen's kappa 0.48, mo
 three classes (kappa 0.28); the two models never agreed on a "partial" claim. This is model-vs-model
 agreement, not human validation; the human labelling tool below is ready for that.
 
+Ranked causes (follow-up experiment, same 40 tickets and judge): 48% correct versus 40%, but a lower mean score
+(3.20 versus 3.30) and fewer fully correct answers (2 versus 7); paired 6 better, 23 same, 11 worse (p = 0.33).
+Inconclusive: kept for usability, not as a proven accuracy gain.
+
 Full write-up: [docs/REPORT.md](docs/REPORT.md).
 
 ```bash
@@ -161,23 +178,21 @@ streamlit run eval/label_app.py        # label claims; the verifier's verdict is
 python -m eval.verifier_audit score    # agreement, confusion matrix, Cohen's kappa
 ```
 
-## Web UI, login and monitoring
+## Web app, login and monitoring
 
-```bash
-python -m scripts.create_user --demo        # demo users; passwords go to config/DEMO_CREDENTIALS.local.txt
-uvicorn app.main:app                        # API on :8000
-streamlit run ui/streamlit_app.py           # UI on http://localhost:8501
-```
+A React, TypeScript and Tailwind app in `frontend/`, served by FastAPI at `/app`. For live-reload development, run
+`npm run dev` in `frontend/` alongside the API. `POST /conversations/stream` sends step, source and text events
+as they happen (Server-Sent Events).
 
 - **Login:** `POST /auth/login` returns a signed JWT (8-hour shift). Passwords are stored only as salted
   PBKDF2-SHA256 hashes in a git-ignored `config/users.json`.
 - **Roles and document access:** every chunk is labelled `public` or `restricted` (etcd and control-plane
-  runbooks, 69 chunks). Search filters on that label inside Qdrant, so restricted runbooks never reach
-  the LLM for a `developer`. `admin` and `sre` see everything and can open monitoring.
-- **Query log:** every `/ask` and `/agent/ask` call is stored in SQLite (user, model, confidence,
-  support rate, latency, errors); `GET /metrics/summary` and the Monitoring page summarize it.
+  runbooks, 69 chunks, plus uploads marked restricted). Search filters on that label inside Qdrant.
+- **Conversations:** saved per user in SQLite; users cannot open, change or delete each other's.
+- **Query log and feedback:** every answer records its user, model, confidence, support rate, latency and
+  errors; `GET /metrics/summary` and the Monitoring page summarize them.
 
-| Role | Restricted runbooks | Monitoring | Raw documents |
+| Role | Restricted documents | Upload documents | Monitoring |
 |---|---|---|---|
 | admin, sre | yes | yes | yes |
 | developer | no | no | no |
@@ -188,16 +203,18 @@ streamlit run ui/streamlit_app.py           # UI on http://localhost:8501
 copy .env.example .env                                                     # then add your free Groq key as API_KEY
 python -m scripts.create_user --demo                                       # users + JWT secret (needs the Python setup above)
 docker compose -f infra/docker-compose.yml --profile setup run --rm indexer   # once: download data, build the index (~5 min)
-docker compose -f infra/docker-compose.yml --profile app up -d --build     # start: UI on http://localhost:8501
+docker compose -f infra/docker-compose.yml --profile app up -d --build     # start: open http://localhost:8000
 docker compose -f infra/docker-compose.yml --profile app down              # stop (data is kept)
 ```
 
 The image runs as a non-root user and contains no secrets (`.env` and `config/` are excluded); the search
-models are baked in. Ports are published on 127.0.0.1 only, and the UI container gets no API keys. Ollama stays
+models are baked in. The React app is built in a separate stage and served by the API. Ports are published on
+127.0.0.1 only. Ollama stays
 on the host for GPU access and is reached through `host.docker.internal`. On this machine, Docker Desktop 4.34
 leaves a stale socket when it closes, so start it with `scripts/start_docker.ps1`.
 
-GitHub Actions (`.github/workflows/ci.yml`) runs lint, the tests (no API key, GPU or Docker needed) and an image
+GitHub Actions (`.github/workflows/ci.yml`) runs lint, backend and frontend tests (no API key, GPU or Docker), a
+type check, and an image
 build on every push and pull request.
 
 ## Project layout
@@ -205,17 +222,17 @@ build on every push and pull request.
 ```
 app/
   api/routes/   FastAPI endpoints
-  core/         config, logging
-  ingestion/    parsers for runbooks, tickets and logs
+  core/         config, login, conversations, query log
+  ingestion/    parsers for runbooks, tickets, logs and uploads
   rag/          chunking, embeddings, retrieval, reranking
   agents/       LangGraph incident-resolution agent
   llm/          LLM provider router (Ollama / Groq)
 data/           raw and processed datasets (only tickets are committed)
-scripts/        data download, ticket generation, LLM comparison
+frontend/       React web app
+scripts/        data download, ticket generation, user creation
 eval/           evaluation sets and benchmark scripts
 infra/          docker-compose and monitoring config
 tests/          pytest tests
-ui/             Streamlit web UI
 config/         local users and demo credentials (git-ignored)
 ```
 
@@ -230,7 +247,10 @@ config/         local users and demo credentials (git-ignored)
 - [x] Step 7: LangGraph agent with a verification step
 - [x] Step 8: UI, auth, observability
 - [x] Step 9: Evaluation, ablation studies and report ([docs/REPORT.md](docs/REPORT.md))
-- [ ] Step 10: Docker and CI done; GitHub publication and deployment pending
+- [x] Step 10: Docker, CI and GitHub
+- [x] Version 1: React app, follow-ups, document upload, ranked causes, feedback, live streaming
+- [ ] Online demo and demo video
+- [ ] Version 2: log analysis, Slack bot, incident reports
 
 ## License
 

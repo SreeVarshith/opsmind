@@ -4,7 +4,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
-SourceType = Literal["runbook", "postmortem", "log", "ticket"]
+SourceType = Literal["runbook", "postmortem", "log", "ticket", "uploaded"]
 
 
 class Document(BaseModel):

@@ -11,8 +11,10 @@
 - revise:   if too much is unsupported, send the draft back with the list of problems
 - finalize: attach a confidence level and flag any statement that is still not supported
 """
+import asyncio
 import operator
 import time
+from collections.abc import AsyncIterator
 from functools import lru_cache
 from typing import Annotated, Any, Literal, TypedDict
 
@@ -34,6 +36,7 @@ from app.rag.answer import (
     get_answerer,
     normalize_citations,
     split_claims,
+    standalone_question,
     to_citation,
 )
 from app.rag.vector_store import SearchHit
@@ -76,6 +79,8 @@ class AgentState(TypedDict, total=False):
     service: str | None
     provider: str | None
     access: list[str] | None
+    history: list[Message] | None
+    standalone: str
     analysis: dict[str, Any]
     search_query: str
     hits: list[SearchHit]
@@ -126,9 +131,11 @@ class IncidentAgent:
     # ---------- nodes ----------
     async def analyze(self, state: AgentState) -> dict:
         start = time.perf_counter()
+        standalone = await standalone_question(self.llm, state["question"], state.get("history"),
+                                               state.get("provider"), self.fast)
         try:
             res = await self.llm.generate(
-                [Message(role="system", content=ANALYZE_PROMPT), Message(role="user", content=state["question"])],
+                [Message(role="system", content=ANALYZE_PROMPT), Message(role="user", content=standalone)],
                 provider=state.get("provider"), models=self.fast, temperature=0.0, max_tokens=600)
             analysis = parse_json_object(res.text)
             query = str(analysis.get("search_query") or "").strip()
@@ -136,20 +143,23 @@ class IncidentAgent:
             detail = f"{analysis.get('category')}: {analysis.get('summary')}"
         except (LLMError, ValueError) as e:  # triage is a helper: on failure, search with the question itself
             analysis, query, used, detail = {}, "", [], f"skipped ({str(e)[:80]})"
-        return {"analysis": analysis, "search_query": query, "models_used": used,
+        return {"analysis": analysis, "search_query": query, "models_used": used, "standalone": standalone,
                 "trace": [Step(step="analyze", ms=_ms(start), detail=detail)]}
 
     async def retrieve(self, state: AgentState) -> dict:
         start = time.perf_counter()
         # Keep the original wording (exact error strings help BM25) and add the triage query.
-        query = state["question"] + ("\n" + state["search_query"] if state.get("search_query") else "")
-        hits = self.answerer.gather_sources(query, None, None, state.get("service"), state.get("access"))
+        base = state.get("standalone") or state["question"]
+        query = base + ("\n" + state["search_query"] if state.get("search_query") else "")
+        hits = await asyncio.to_thread(self.answerer.gather_sources, query, None, None, state.get("service"),
+                                       state.get("access"))
         titles = ", ".join(h.metadata.get("alert") or h.title[:30] for h in hits[:3])
         return {"hits": hits, "trace": [Step(step="retrieve", ms=_ms(start), detail=f"{len(hits)} sources: {titles}...")]}
 
     async def generate(self, state: AgentState) -> dict:
         start = time.perf_counter()
-        res = await self.llm.generate(build_messages(state["question"], state["hits"], state.get("feedback")),
+        res = await self.llm.generate(build_messages(state["question"], state["hits"], state.get("feedback"),
+                                                     state.get("history")),
                                       provider=state.get("provider"), temperature=0.1, max_tokens=self.max_tokens)
         draft = normalize_citations(res.text).strip()
         label = "revise" if state.get("feedback") else "generate"
@@ -237,12 +247,37 @@ class IncidentAgent:
         return g.compile()
 
     # ---------- entry point ----------
+    @staticmethod
+    def _initial_state(question: str, service: str | None, provider: str | None, access: list[str] | None,
+                       history: list[Message] | None) -> AgentState:
+        return {"question": question, "service": service, "provider": provider, "access": access,
+                "history": history, "revisions": 0, "trace": [], "models_used": []}
+
     async def run(self, question: str, service: str | None = None, provider: str | None = None,
-                  access: list[str] | None = None) -> AgentResult:
+                  access: list[str] | None = None, history: list[Message] | None = None) -> AgentResult:
         start = time.perf_counter()
-        s = await self.graph.ainvoke({"question": question, "service": service, "provider": provider,
-                                      "access": access,
-                                      "revisions": 0, "trace": [], "models_used": []})
+        s = await self.graph.ainvoke(self._initial_state(question, service, provider, access, history))
+        return self._result(question, s, start)
+
+    async def run_stream(self, question: str, service: str | None = None, provider: str | None = None,
+                         access: list[str] | None = None,
+                         history: list[Message] | None = None) -> AsyncIterator[dict]:
+        """Same as run(), as events: one per finished step, sources when found, then the result."""
+        start = time.perf_counter()
+        state: AgentState = {}
+        reported, sources_sent = 0, False
+        async for state in self.graph.astream(self._initial_state(question, service, provider, access, history),
+                                              stream_mode="values"):
+            for step in state.get("trace", [])[reported:]:
+                yield {"type": "step", **step.model_dump()}
+            reported = len(state.get("trace", []))
+            if state.get("hits") and not sources_sent:
+                sources_sent = True
+                yield {"type": "sources",
+                       "sources": [to_citation(i, h).model_dump() for i, h in enumerate(state["hits"], 1)]}
+        yield {"type": "result", "result": self._result(question, state, start).model_dump()}
+
+    def _result(self, question: str, s: AgentState, start: float) -> AgentResult:
         hits = s.get("hits", [])
         sources = [to_citation(i, h) for i, h in enumerate(hits, 1)]
         valid, invalid = check_citations(s.get("draft", ""), len(hits))

@@ -59,7 +59,7 @@ def _runbook_sections(doc: Document) -> list[tuple[str | None, str]]:
 
 
 def chunk_document(doc: Document) -> list[Chunk]:
-    sections = _runbook_sections(doc) if doc.source_type == "runbook" else [(None, doc.text)]
+    sections = _runbook_sections(doc) if doc.source_type in ("runbook", "uploaded") else [(None, doc.text)]
     chunks = []
     for section, body in sections:
         for part in _split_long(body):

@@ -1,5 +1,6 @@
 """Shared types for every LLM provider."""
 from abc import ABC, abstractmethod
+from collections.abc import AsyncIterator
 from typing import Literal
 
 from pydantic import BaseModel
@@ -29,3 +30,8 @@ class LLMProvider(ABC):
     async def generate(self, messages: list[Message], temperature: float = 0.2, max_tokens: int = 1024,
                        model: str | None = None) -> LLMResponse:
         """Send a chat conversation to the model and return its reply. `model` overrides the default model."""
+
+    async def stream(self, messages: list[Message], temperature: float = 0.2, max_tokens: int = 1024,
+                     model: str | None = None) -> AsyncIterator[str]:
+        """Yield the reply piece by piece. Default: one piece, for providers without real streaming."""
+        yield (await self.generate(messages, temperature, max_tokens, model)).text
