@@ -1,12 +1,13 @@
 import { BookOpenCheck, Loader2, ShieldCheck, Zap } from "lucide-react";
 import { useState, type FormEvent } from "react";
+import { IncidentPreview } from "../components/IncidentPreview";
 import { Brand, ErrorNote } from "../components/Layout";
 import { login, type User } from "../lib/api";
 
 const POINTS = [
-  { icon: BookOpenCheck, title: "Cited answers", text: "Every step links back to your runbooks, tickets and postmortems." },
-  { icon: ShieldCheck, title: "Fact-checked", text: "Careful mode checks each sentence and flags what it can't verify." },
-  { icon: Zap, title: "Fast under pressure", text: "Paste an error and get likely causes and fixes in seconds." },
+  { icon: BookOpenCheck, label: "Cited answers" },
+  { icon: ShieldCheck, label: "Fact-checked" },
+  { icon: Zap, label: "Live progress" },
 ];
 
 export function LoginPage({ notice, onLogin }: { notice: string | null; onLogin: (user: User) => void }) {
@@ -29,23 +30,22 @@ export function LoginPage({ notice, onLogin }: { notice: string | null; onLogin:
 
   return (
     <div className="grid min-h-full lg:grid-cols-[1.1fr_1fr]">
-      <section className="hidden flex-col justify-center gap-8 border-r border-line bg-panel p-12 lg:flex">
-        <div className="max-w-md">
+      <section className="hidden flex-col items-center justify-center gap-7 border-r border-line bg-panel p-10 lg:flex">
+        <div className="w-full max-w-md">
           <Brand size={24} />
-          <h1 className="mt-6 text-3xl leading-tight font-semibold tracking-tight">
-            Resolve incidents with answers you can verify
+          <h1 className="mt-5 text-3xl leading-tight font-semibold tracking-tight">
+            From alert to likely fix, with sources you can check
           </h1>
+          <p className="mt-2 mb-0 text-ink-2">
+            Paste an error and OpsMind finds your runbooks and past incidents, then explains the likely cause and the fix.
+          </p>
         </div>
-        <ul className="grid max-w-md gap-5">
-          {POINTS.map(({ icon: Icon, title, text }) => (
-            <li key={title} className="flex gap-3">
-              <span className="mt-0.5 self-start rounded-lg bg-accent-soft p-2 text-accent-ink">
-                <Icon size={18} aria-hidden />
-              </span>
-              <div>
-                <div className="font-medium">{title}</div>
-                <div className="text-ink-2">{text}</div>
-              </div>
+        <IncidentPreview />
+        <ul className="m-0 flex w-full max-w-md list-none flex-wrap gap-x-5 gap-y-2 p-0">
+          {POINTS.map(({ icon: Icon, label }) => (
+            <li key={label} className="flex items-center gap-1.5 text-[13px] text-ink-2">
+              <Icon size={15} className="text-accent-ink" aria-hidden />
+              {label}
             </li>
           ))}
         </ul>
