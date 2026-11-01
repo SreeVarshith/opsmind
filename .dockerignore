@@ -1,0 +1,27 @@
+# Secrets and local state must never end up in an image
+.env
+config/
+**/*.log
+data/opsmind.db
+
+# Rebuilt or downloaded by the indexer
+data/processed/
+data/raw/runbooks/
+data/raw/postmortems/
+data/raw/logs/
+
+# Not needed to run the app
+.git/
+.venv/
+.vscode/
+.claude/
+.cache/
+.pytest_cache/
+.ruff_cache/
+**/__pycache__/
+**/*.pyc
+qdrant_storage/
+tests/
+docs/
+eval/results/
+eval/labels/

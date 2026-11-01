@@ -180,6 +180,24 @@ streamlit run ui/streamlit_app.py           # UI on http://localhost:8501
 | admin, sre | yes | yes | yes |
 | developer | no | no | no |
 
+## Run everything with Docker
+
+```bash
+copy .env.example .env                                                     # then add your free Groq key as API_KEY
+python -m scripts.create_user --demo                                       # users + JWT secret (needs the Python setup above)
+docker compose -f infra/docker-compose.yml --profile setup run --rm indexer   # once: download data, build the index (~5 min)
+docker compose -f infra/docker-compose.yml --profile app up -d --build     # start: UI on http://localhost:8501
+docker compose -f infra/docker-compose.yml --profile app down              # stop (data is kept)
+```
+
+The image runs as a non-root user and contains no secrets (`.env` and `config/` are excluded); the search
+models are baked in. Ports are published on 127.0.0.1 only, and the UI container gets no API keys. Ollama stays
+on the host for GPU access and is reached through `host.docker.internal`. On this machine, Docker Desktop 4.34
+leaves a stale socket when it closes, so start it with `scripts/start_docker.ps1`.
+
+GitHub Actions (`.github/workflows/ci.yml`) runs lint, the tests (no API key, GPU or Docker needed) and an image
+build on every push and pull request.
+
 ## Project layout
 
 ```
@@ -210,4 +228,4 @@ config/         local users and demo credentials (git-ignored)
 - [x] Step 7: LangGraph agent with a verification step
 - [x] Step 8: UI, auth, observability
 - [x] Step 9: Evaluation, ablation studies and report ([docs/REPORT.md](docs/REPORT.md))
-- [ ] Step 10: Docker, CI, deployment
+- [ ] Step 10: Docker and CI done; GitHub publication and deployment pending

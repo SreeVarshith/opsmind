@@ -1,15 +1,84 @@
-# Local infrastructure for OpsMind.
-#   docker compose -f infra/docker-compose.yml up -d
+# OpsMind stack. Run from the project root.
+#
+#   docker compose -f infra/docker-compose.yml up -d                          # Qdrant only (for local development)
+#   docker compose -f infra/docker-compose.yml --profile setup run --rm indexer   # build the search index once
+#   docker compose -f infra/docker-compose.yml --profile app up -d --build    # everything: UI on http://localhost:8501
+#
+# Ports are published on 127.0.0.1 only, so nothing is reachable from other devices on the network.
+x-opsmind: &opsmind
+  build:
+    context: ..
+  image: opsmind:latest
+  env_file: ../.env
+  environment:
+    QDRANT_URL: http://qdrant:6333
+    QDRANT_PATH: ""
+    OLLAMA_BASE_URL: http://host.docker.internal:11434   # Ollama keeps running on the host, for its GPU
+  extra_hosts:
+    - "host.docker.internal:host-gateway"
+  depends_on:
+    qdrant:
+      condition: service_healthy
+
 services:
   qdrant:
     image: qdrant/qdrant:v1.19.1   # keep in step with qdrant-client in requirements.txt
     container_name: opsmind-qdrant
     ports:
-      - "6333:6333"   # REST API + web dashboard at http://localhost:6333/dashboard
-      - "6334:6334"   # gRPC
+      - "127.0.0.1:6333:6333"   # REST API + web dashboard at http://localhost:6333/dashboard
+      - "127.0.0.1:6334:6334"   # gRPC
     volumes:
       - qdrant_storage:/qdrant/storage
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c ':> /dev/tcp/127.0.0.1/6333'"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  api:
+    <<: *opsmind
+    profiles: [app]
+    container_name: opsmind-api
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - app_data:/app/data
+      - ../config:/app/config    # users.json stays on the host and out of the image
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request as u; u.urlopen('http://127.0.0.1:8000/health', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  ui:
+    # Not based on the shared block on purpose: the UI only calls the API, so it gets no secrets.
+    build:
+      context: ..
+    image: opsmind:latest
+    profiles: [app]
+    container_name: opsmind-ui
+    command: ["python", "-m", "streamlit", "run", "ui/streamlit_app.py", "--server.address", "0.0.0.0",
+              "--server.port", "8501", "--server.runOnSave", "false"]
+    environment:
+      OPSMIND_API_URL: http://api:8000
+    ports:
+      - "127.0.0.1:8501:8501"
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # One-off job: download the public data, parse it, and build the search index.
+  indexer:
+    <<: *opsmind
+    profiles: [setup]
+    container_name: opsmind-indexer
+    command: ["sh", "-c", "python scripts/download_data.py && python -m app.ingestion.pipeline && python -m app.rag.index"]
+    volumes:
+      - app_data:/app/data
 
 volumes:
   qdrant_storage:
+  app_data:
