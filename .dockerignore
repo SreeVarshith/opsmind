@@ -14,7 +14,6 @@ data/raw/logs/
 .git/
 .venv/
 .vscode/
-.claude/
 .cache/
 .pytest_cache/
 .ruff_cache/
